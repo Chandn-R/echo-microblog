@@ -6,11 +6,11 @@ const asyncHandler = (func: RequestHandler) => {
             await func(req, res, next)
         } catch (error: unknown) {
 
-            const err = error as { message: string, statuscode: number }
+            const err = error as { message: string, statusCode: number }
 
-            res.status(err.statuscode || 500).json({
-                success: false,
-                message: err.message
+            res.status(err.statusCode || 500).json({
+                message: err.message,
+                success: false
             })
         }
     }
