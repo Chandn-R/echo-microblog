@@ -14,12 +14,14 @@ app.use(multer().any()); // middleware to be done in seperate file
 
 
 // import routes 
-import authRoutes from "./routes/auth.route";
+import authRoutes from "./routes/auth.route.js";
+import userRoutes from "./routes/user.route.js";
 
 
 
 // routes
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
  
 
 
