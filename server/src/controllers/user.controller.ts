@@ -1,9 +1,15 @@
 import { Request, Response } from "express";
-import asyncHandler from "../utilities/asyncHandler";
-import ApiError from "../utilities/apiErrors";
-import { User } from "../models/user.model";
-import ApiResponses from "../utilities/apiResponses";
 import mongoose from "mongoose";
+import asyncHandler from "../utilities/asyncHandler.js";
+import ApiError from "../utilities/apiErrors.js";
+import ApiResponses from "../utilities/apiResponses.js";
+import { User } from "../models/user.model.js";
+import { Post } from "../models/post.model.js";
+
+type blockType = {
+    type: "text" | "image";
+    value: string;
+}
 
 export const followUser = asyncHandler(async (req: Request, res: Response) => {
     const userToFollowId = req.params.id;
@@ -72,4 +78,32 @@ export const unfollowUser = asyncHandler(async (req: Request, res: Response) => 
     );
 });
 
+export const createPost = asyncHandler(async (req: Request, res: Response) => {
+    const { content } = JSON.parse(req.body);
+    const currentUserId = req.user._id;
 
+    if (!Array.isArray(content) || content.length === 0) {
+        throw new ApiError(400, "Content is required");
+    }
+
+    const blocks = content.map((block: blockType) => {
+        if (block.type === 'image') {
+            const file = (req.files as { [fieldname: string]: Express.Multer.File[] })?.[block.value]?.[0];
+            if (!file) throw new ApiError(400, `Image ${block.value} not uploaded`);
+            return { type: 'image', value: `/uploads/${file.filename}` };
+        } else if (block.type === 'text') {
+            return { type: 'text', value: block.value };
+        } else {
+            throw new ApiError(400, "Invalid block type");
+        }
+    });
+
+    const post = await Post.create({
+        user: currentUserId,
+        content: blocks
+    });
+
+    res.status(201).json(
+        new ApiResponses(201, post, "Post created successfully")
+    );
+});

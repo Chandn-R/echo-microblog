@@ -2,41 +2,47 @@ import mongoose from "mongoose";
 
 export interface IPost extends mongoose.Document {
     user: mongoose.Schema.Types.ObjectId;
-    content: string;
-    image: string;
+    content: {
+        type: "text" | "image";
+        value: string;
+    }[];
     likes: number;
-    comments: [{
+    comments: {
         user: mongoose.Schema.Types.ObjectId;
         content: string;
         userProfilePicture: string;
         username: string;
-    }];
+    }[];
     createdAt: Date;
     updatedAt: Date;
 }
 
 const postSchema = new mongoose.Schema<IPost>({
     user: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Types.ObjectId,
         ref: "User",
         required: true,
     },
-    content: {
-        type: String,
-        trim: true,
-        maxlength: 300,
-    },
-    image: {
-        type: String,
-        default: "",
-    },
+    content: [
+        {
+            type: {
+                type: String,
+                enum: ['text', 'image'],
+                required: true,
+            },
+            value: {
+                type: String,
+                required: true,
+            },
+        },
+    ],
     likes: {
         type: Number,
         default: 0,
     },
     comments: [{
         user: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: mongoose.Types.ObjectId,
             ref: "User",
             required: true,
         },
@@ -52,6 +58,7 @@ const postSchema = new mongoose.Schema<IPost>({
         },
         username: {
             type: String,
+            default: "",
         }
     }],
 }, { timestamps: true });
