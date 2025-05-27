@@ -5,6 +5,8 @@ import ApiError from "../utilities/apiErrors.js";
 import ApiResponses from "../utilities/apiResponses.js";
 import { User } from "../models/user.model.js";
 import { Post } from "../models/post.model.js";
+import cloudinaryUpload from "../utilities/cloudinary.js";
+
 
 type blockType = {
     type: "text" | "image";
@@ -105,5 +107,51 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
 
     res.status(201).json(
         new ApiResponses(201, post, "Post created successfully")
+    );
+});
+
+export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+
+    const currentUserId = req.user._id;
+    const { name, username, bio, email } = req.body;
+    const profilePicture = req.file as Express.Multer.File;
+
+    const user = await User.findById(currentUserId);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (username && username !== user.username) {
+        const existingUser = await User.findOne({ username });
+        if (existingUser && (existingUser._id as mongoose.Types.ObjectId).toString() !== currentUserId.toString()) {
+            throw new ApiError(400, "Username is already taken");
+        }
+    }
+
+    if (email && email !== user.email) {
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail && (existingEmail._id as mongoose.Types.ObjectId).toString() !== currentUserId.toString()) {
+            throw new ApiError(400, "Email is already in use");
+        }
+    }
+
+    if (profilePicture) {
+        try {
+            const uploadedImageUrl = await cloudinaryUpload(profilePicture.buffer);
+            user.profilePicture = uploadedImageUrl;
+        } catch (error) {
+            throw new ApiError(500, "Failed to upload profile picture");
+        }
+    }
+
+    if (name) user.name = name;
+    if (username) user.username = username;
+    if (bio) user.bio = bio;
+    if (email) user.email = email;
+
+    await user.save();
+
+    res.status(200).json(
+        new ApiResponses(200, user, "Profile updated successfully")
     );
 });
