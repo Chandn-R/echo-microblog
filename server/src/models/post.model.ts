@@ -1,14 +1,16 @@
 import mongoose from "mongoose";
 
 export interface IPost extends mongoose.Document {
-    user: mongoose.Schema.Types.ObjectId;
+    user: mongoose.Types.ObjectId;
     content: {
         type: "text" | "image";
         value: string;
+        public_id?: string;
     }[];
-    likes: number;
+    likes: mongoose.Types.ObjectId[];
     comments: {
-        user: mongoose.Schema.Types.ObjectId;
+        _id?: mongoose.Types.ObjectId;
+        user: mongoose.Types.ObjectId;
         content: string;
         userProfilePicture: string;
         username: string;
@@ -19,7 +21,7 @@ export interface IPost extends mongoose.Document {
 
 const postSchema = new mongoose.Schema<IPost>({
     user: {
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
     },
@@ -34,15 +36,19 @@ const postSchema = new mongoose.Schema<IPost>({
                 type: String,
                 required: true,
             },
+            public_id:{
+                type: String,
+            }
         },
     ],
-    likes: {
-        type: Number,
-        default: 0,
-    },
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }],
+
     comments: [{
         user: {
-            type: mongoose.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
         },

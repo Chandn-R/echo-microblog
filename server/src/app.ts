@@ -1,8 +1,6 @@
 import express from "express";
 import cors from "cors"; 
 import cookieParser from "cookie-parser";
-import multer from "multer"
-
 
 const app = express();
 
@@ -15,12 +13,13 @@ app.use(cookieParser());
 // import routes 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
-
+import postRoutes from "./routes/post.route.js";
 
 
 // routes
 app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/posts", postRoutes);
  
 
 

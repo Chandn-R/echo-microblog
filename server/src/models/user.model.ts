@@ -9,7 +9,10 @@ export interface IUser extends mongoose.Document {
     password: string;
     followers: mongoose.Types.ObjectId[];
     following: mongoose.Types.ObjectId[];
-    profilePicture: string;
+    profilePicture: {
+        secure_url: string;
+        public_id: string;
+    };
     bio: string;
     createdAt: Date;
     updatedAt: Date;
@@ -43,19 +46,25 @@ const userSchema = new mongoose.Schema<IUser>({
         type: String,
         required: true,
         minlength: 6,
-        
+
     },
     followers: [{
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     }],
     following: [{
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     }],
     profilePicture: {
-        type: String,
-        default: "",
+        secure_url: {
+            type: String,
+            default: "",
+        },
+        public_id: {
+            type: String,
+            default: "",
+        },
     },
     bio: {
         type: String,

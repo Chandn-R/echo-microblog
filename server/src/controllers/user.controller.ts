@@ -4,14 +4,9 @@ import asyncHandler from "../utilities/asyncHandler.js";
 import ApiError from "../utilities/apiErrors.js";
 import ApiResponses from "../utilities/apiResponses.js";
 import { User } from "../models/user.model.js";
-import { Post } from "../models/post.model.js";
 import cloudinaryUpload from "../utilities/cloudinary.js";
 
 
-type blockType = {
-    type: "text" | "image";
-    value: string;
-}
 
 export const followUser = asyncHandler(async (req: Request, res: Response) => {
     const userToFollowId = req.params.id;
@@ -80,36 +75,6 @@ export const unfollowUser = asyncHandler(async (req: Request, res: Response) => 
     );
 });
 
-export const createPost = asyncHandler(async (req: Request, res: Response) => {
-    const { content } = JSON.parse(req.body);
-    const currentUserId = req.user._id;
-
-    if (!Array.isArray(content) || content.length === 0) {
-        throw new ApiError(400, "Content is required");
-    }
-
-    const blocks = content.map((block: blockType) => {
-        if (block.type === 'image') {
-            const file = (req.files as { [fieldname: string]: Express.Multer.File[] })?.[block.value]?.[0];
-            if (!file) throw new ApiError(400, `Image ${block.value} not uploaded`);
-            return { type: 'image', value: `/uploads/${file.filename}` };
-        } else if (block.type === 'text') {
-            return { type: 'text', value: block.value };
-        } else {
-            throw new ApiError(400, "Invalid block type");
-        }
-    });
-
-    const post = await Post.create({
-        user: currentUserId,
-        content: blocks
-    });
-
-    res.status(201).json(
-        new ApiResponses(201, post, "Post created successfully")
-    );
-});
-
 export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
 
     const currentUserId = req.user._id;
@@ -137,9 +102,12 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
 
     if (profilePicture) {
         try {
-            const uploadedImageUrl = await cloudinaryUpload(profilePicture.buffer);
+            console.log(profilePicture.buffer);
+            
+            const uploadedImageUrl = await cloudinaryUpload(profilePicture.buffer, "profile_pictures");
             user.profilePicture = uploadedImageUrl;
         } catch (error) {
+            console.error("Cloudinary upload failed:", error);
             throw new ApiError(500, "Failed to upload profile picture");
         }
     }
@@ -155,3 +123,31 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
         new ApiResponses(200, user, "Profile updated successfully")
     );
 });
+
+export const getUser = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.params.id;
+    const currentUserId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ApiError(400, "Invalid user ID");
+    }
+
+    const user = await User.findById(userId)
+        .populate("followers", "username profilePicture")
+        .populate("following", "username profilePicture")
+        .select("-password -email -__v");
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const isFollowing = user.followers.some(id => id.toString() === currentUserId.toString());
+
+    res.status(200).json(
+        new ApiResponses(200, { ...user.toObject(), isFollowing }, "User retrieved successfully")
+    );
+});
+
+
+
+

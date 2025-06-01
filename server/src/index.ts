@@ -1,8 +1,15 @@
-import app from "./app.js";
 import dotenv from "dotenv";
+dotenv.config();
+
+import app from "./app.js";
 import connectDB from "./config/db.js";
 
-dotenv.config();
+console.log("Loaded env:", {
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET
+});
+
 
 const PORT = process.env.PORT as string || 3000;
 
