@@ -209,3 +209,27 @@ export const deleteComment = asyncHandler(async (req: Request, res: Response) =>
 
     res.status(200).json(new ApiResponses(200, "Comment deleted successfully"));
 });
+
+export const getPosts = asyncHandler(async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+
+    const posts = await Post.find()
+        .populate("user", "username profilePicture")
+        .populate("comments.user", "username profilePicture")
+        .sort({ createdAt: -1 })
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .select("-__v");
+
+    const totalPosts = await Post.countDocuments();
+
+    res.status(200).json(
+        new ApiResponses(200, {
+            posts,
+            totalPosts,
+            currentPage: Number(page),
+            totalPages: Math.ceil(totalPosts / Number(limit))
+        }, "Posts retrieved successfully")
+    );
+
+});
