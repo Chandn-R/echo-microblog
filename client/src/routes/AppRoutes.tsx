@@ -4,6 +4,7 @@ import Home from "@/pages/Home";
 import { Login } from "@/pages/Login";
 import { SignUp } from "@/pages/SignUp";
 import type { RouteObject } from "react-router-dom";
+import ProtectedRoute from "../components/ProtectedRoutes";
 
 export const routes: RouteObject[] = [
   {
@@ -11,7 +12,14 @@ export const routes: RouteObject[] = [
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
-      { path: "create", element: <CreatePost /> },
+      {
+        path: "create",
+        element: (
+          <ProtectedRoute>
+            <CreatePost />
+          </ProtectedRoute>
+        ),
+      },
       //   { path: "post/:id", element: <PostDetail /> },
       //   { path: "u/:username", element: <UserProfile /> },
     ],

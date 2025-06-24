@@ -12,8 +12,6 @@ export interface IPost extends mongoose.Document {
         _id?: mongoose.Types.ObjectId;
         user: mongoose.Types.ObjectId;
         content: string;
-        userProfilePicture: string;
-        username: string;
     }[];
     createdAt: Date;
     updatedAt: Date;
@@ -58,14 +56,6 @@ const postSchema = new mongoose.Schema<IPost>({
             trim: true,
             maxlength: 300,
         },
-        userProfilePicture: {
-            type: String,
-            default: "",
-        },
-        username: {
-            type: String,
-            default: "",
-        }
     }],
 }, { timestamps: true });
 

@@ -5,12 +5,13 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "./index.css";
 import App from "./App.tsx";
 
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </ThemeProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
   </StrictMode>
 );

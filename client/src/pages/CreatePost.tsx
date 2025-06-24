@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, X, Image as ImageIcon, Type, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
+import api from "@/lib/api";
 
 type Block = { type: "text"; value: string } | { type: "image"; value: File };
 
@@ -39,13 +41,26 @@ export function CreatePost() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    // ... existing submit logic ...
+    try {
+      const Response = await api.post("/posts",{
+        blocks
+      })
+      console.log(Response);
+      
+    } catch (error) {
+      console.error("Error creating post:", error);
+      toast.error("Failed to create post. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Card className="w-full max-w-2xl border-border shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl font-semibold tracking-tight">Create Post</CardTitle>
+        <CardTitle className="text-xl font-semibold tracking-tight">
+          Create Post
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <AnimatePresence>
@@ -137,7 +152,10 @@ export function CreatePost() {
 
         <Button
           onClick={handleSubmit}
-          disabled={submitting || blocks.every(b => b.type === "text" && !b.value.trim())}
+          disabled={
+            submitting ||
+            blocks.every((b) => b.type === "text" && !b.value.trim())
+          }
           className="w-full h-10 rounded-lg transition-all"
         >
           {submitting ? (

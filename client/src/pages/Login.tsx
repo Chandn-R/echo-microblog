@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { loginUser } from "@/lib/services/authServices";
 import { Spinner } from "@/components/ui/loader";
 import {
   Card,
@@ -17,31 +16,40 @@ import { useForm } from "react-hook-form";
 import { loginSchema, type LoginSchema } from "../schemas/loginSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
+import { useAuthStore } from "@/stores/authStore";
+import { useState } from "react";
 
 export function Login() {
   const navigate = useNavigate();
+  const { login, error } = useAuthStore();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginSchema) => {
-    try {
-      const { data: response, error } = await loginUser(data);
+    // clearError();
+    setIsSubmitting(true);
 
-      if (error) {
-        toast.error(error.message || "Login failed. Please try again.");
-        return;
-      }
+    await login({
+      email: data.email,
+      password: data.password,
+    });
+
+    const { isLoggedIn } = useAuthStore.getState();
+
+    if (isLoggedIn) {
+      toast.success("Login successful!");
       navigate("/");
-    } catch (error) {
-      console.error("Login failed:", error);
-      toast.error("An unexpected error occurred. Please try again.");
     }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -53,15 +61,16 @@ export function Login() {
             Enter your username or email to login into your account
           </CardDescription>
           <CardAction>
-            <Button variant="link"></Button>
-            <Button onClick={() => navigate("/signup")} variant="link">
+            <Button variant="link" onClick={() => navigate("/signup")}>
               Sign Up
             </Button>
           </CardAction>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-6">
+              {/* Email Field */}
               <div className="grid gap-2">
                 <Label htmlFor="email">Username / Email</Label>
                 <Input
@@ -74,6 +83,8 @@ export function Login() {
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
               </div>
+
+              {/* Password Field */}
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
@@ -84,11 +95,7 @@ export function Login() {
                     Forgot your password?
                   </a>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  {...register("password")}
-                />
+                <Input id="password" type="password" {...register("password")} />
                 {errors.password && (
                   <p className="text-sm text-red-500">
                     {errors.password.message}
@@ -96,10 +103,15 @@ export function Login() {
                 )}
               </div>
             </div>
+
+            {/* Error and Submit */}
             <CardFooter className="flex-col gap-2 px-0 pb-0 pt-6">
+              {error && (
+                <p className="text-sm text-red-500 text-center">{error}</p>
+              )}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting && <Spinner />}
-                Login
+                {!isSubmitting && "Login"}
               </Button>
             </CardFooter>
           </form>

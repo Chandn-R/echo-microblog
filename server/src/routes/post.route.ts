@@ -1,8 +1,15 @@
 import express from "express";
 import { protectRoute } from "../middlewares/protectRoutes";
-import { createPost, getPost, deletePost, likeUnlikePost, addComment, deleteComment } from "../controllers/post.controller";
+import {
+  createPost,
+  getPost,
+  deletePost,
+  likeUnlikePost,
+  addComment,
+  deleteComment,
+  getPosts,
+} from "../controllers/post.controller";
 import { upload } from "../middlewares/multer.js";
-
 
 const router = express.Router();
 
@@ -12,7 +19,6 @@ router.delete("/:id", protectRoute, deletePost);
 router.patch("/:id/like", protectRoute, likeUnlikePost);
 router.patch("/:id/comment", protectRoute, addComment);
 router.delete("/:postId/comment/:commentId", protectRoute, deleteComment);
+router.get("/", getPosts);
 
-
-
-export default router; 
+export default router;
