@@ -7,6 +7,12 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Separate instance for refresh
+const refreshApi = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
+  withCredentials: true,
+});
+
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
@@ -20,7 +26,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/auth/refresh")
+    ) {
       originalRequest._retry = true;
       const refreshResult = await authService.refreshToken();
 
@@ -38,4 +48,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+export { api, refreshApi };

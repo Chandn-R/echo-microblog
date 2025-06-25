@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { MessageCircle, Heart } from "lucide-react";
-import api from "@/lib/api";
+import { api } from "@/lib/api";
 import { toast } from "react-hot-toast";
 
 interface Post {

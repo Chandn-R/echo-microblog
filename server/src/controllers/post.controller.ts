@@ -6,6 +6,7 @@ import { Post } from "../models/post.model.js";
 import mongoose, { Types } from "mongoose";
 import cloudinaryUpload from "../utilities/cloudinary.js";
 import { v2 as cloudinary } from "cloudinary";
+import logger from "../utilities/logger.js";
 
 type blockType = {
   type: "text" | "image";
@@ -14,46 +15,69 @@ type blockType = {
 };
 
 export const createPost = asyncHandler(async (req: Request, res: Response) => {
-  const { content } = JSON.parse(req.body.body);
   const currentUserId = req.user._id;
 
-  if (!Array.isArray(content) || content.length === 0) {
-    throw new ApiError(400, "Content is required");
-  }
+  console.log("BODY:", req.body);
+  console.log("FILES:", req.files);
 
   const files = req.files as Express.Multer.File[];
-  let fileindex = 0;
-
   const blocks: blockType[] = [];
 
-  for (const block of content) {
-    if (block.type === "image") {
-      if (!files || !files[fileindex]) {
-        throw new ApiError(400, `Image is not uploaded at index ${fileindex}`);
-      }
+  // Check if content is already an array in the body
+  if (Array.isArray(req.body.content)) {
+    for (let i = 0; i < req.body.content.length; i++) {
+      const block = req.body.content[i];
+      if (block.type === "image") {
+        const file = files.find((f) => f.fieldname === `content[${i}][value]`);
+        if (!file) throw new ApiError(400, `Image missing for block ${i}`);
 
-      try {
-        const uploadedImageUrl = await cloudinaryUpload(
-          files[fileindex].buffer,
-          "post_images"
-        );
+        const uploadedImage = await cloudinaryUpload(file.buffer, "post_images");
         blocks.push({
           type: "image",
-          value: uploadedImageUrl.secure_url,
-          public_id: uploadedImageUrl.public_id,
+          value: uploadedImage.secure_url,
+          public_id: uploadedImage.public_id,
         });
-        fileindex++;
-      } catch (error) {
-        console.error("Cloudinary upload failed:", error);
-        throw new ApiError(500, "Failed to upload image");
+      } else if (block.type === "text") {
+        if (!block.value || typeof block.value !== "string") {
+          throw new ApiError(400, "Text block requires valid string");
+        }
+        blocks.push({ type: "text", value: block.value });
+      } else {
+        throw new ApiError(400, "Invalid block type");
       }
-    } else if (block.type === "text") {
-      if (!block.value || typeof block.value !== "string") {
-        throw new ApiError(400, "Text block is missing a valid value");
+    }
+  } else {
+    // Original processing for flat structure
+    const indexes = Array.from(
+      new Set(
+        Object.keys(req.body)
+          .map((key) => key.match(/content\[(\d+)\]/)?.[1])
+          .filter(Boolean)
+      )
+    );
+
+    for (const index of indexes) {
+      const type = req.body[`content[${index}][type]`];
+      const value = req.body[`content[${index}][value]`];
+
+      if (type === "image") {
+        const file = files.find((f) => f.fieldname === `content[${index}][value]`);
+        if (!file) throw new ApiError(400, `Image missing for block ${index}`);
+
+        const uploadedImage = await cloudinaryUpload(file.buffer, "post_images");
+        blocks.push({
+          type: "image",
+          value: uploadedImage.secure_url,
+          public_id: uploadedImage.public_id,
+        });
+      } else if (type === "text") {
+        if (!value || typeof value !== "string") {
+          throw new ApiError(400, "Text block requires valid string");
+        }
+        blocks.push({ type: "text", value });
+      } else {
+        throw new ApiError(400, "Invalid block type");
       }
-      blocks.push({ type: "text", value: block.value });
-    } else {
-      throw new ApiError(400, "Invalid block type");
     }
   }
 
@@ -64,10 +88,10 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
     content: blocks,
   });
 
-  res
-    .status(201)
-    .json(new ApiResponses(201, post, "Post created successfully"));
+  res.status(201).json(new ApiResponses(201, post, "Post created successfully"));
 });
+
+
 
 export const getPost = asyncHandler(async (req: Request, res: Response) => {
   const postId = req.params.id;
@@ -328,6 +352,8 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
 
   // Get total count for pagination metadata
   const totalPosts = await Post.countDocuments();
+
+  logger.info("Posts retrieved successfully");
 
   res.status(200).json(
     new ApiResponses(

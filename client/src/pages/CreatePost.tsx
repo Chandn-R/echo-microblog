@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { PlusCircle, X, Image as ImageIcon, Type, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import api from "@/lib/api";
+import { api } from "@/lib/api";
 
 type Block = { type: "text"; value: string } | { type: "image"; value: File };
 
@@ -24,7 +24,7 @@ export function CreatePost() {
   };
 
   const handleAddImage = (file: File) => {
-    if (file) {
+    if (file instanceof File) {
       setBlocks([...blocks, { type: "image", value: file }]);
     }
   };
@@ -42,11 +42,25 @@ export function CreatePost() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const Response = await api.post("/posts",{
-        blocks
-      })
-      console.log(Response);
-      
+      const formData = new FormData();
+
+      blocks.forEach((block, index) => {
+        formData.append(`content[${index}][type]`, block.type);
+        if (block.type === "image" && block.value instanceof File) {
+          formData.append(`content[${index}][value]`, block.value);
+        } else {
+          formData.append(`content[${index}][value]`, block.value);
+        }
+      });
+
+      const response = await api.post("/posts", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      });
+      console.log(formData);
+      console.log(response);
     } catch (error) {
       console.error("Error creating post:", error);
       toast.error("Failed to create post. Please try again.");
@@ -132,7 +146,9 @@ export function CreatePost() {
               ref={fileInputRef}
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                handleAddImage(file!);
+                if (file) {
+                  handleAddImage(file);
+                }
                 if (fileInputRef.current) fileInputRef.current.value = "";
               }}
             />

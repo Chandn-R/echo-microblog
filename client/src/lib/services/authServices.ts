@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import { api, refreshApi } from "@/lib/api";
 import toast from "react-hot-toast";
 
 export const authService = {
@@ -62,7 +62,7 @@ export const authService = {
 
   async refreshToken() {
     try {
-      const response = await api.post(
+      const response = await refreshApi.post(
         "/auth/refresh",
         {},
         { withCredentials: true }

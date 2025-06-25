@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { requestLogger,errorLogger } from "./middlewares/logging.js";
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(requestLogger);
+app.use(errorLogger);
 
 // import routes
 import authRoutes from "./routes/auth.route.js";

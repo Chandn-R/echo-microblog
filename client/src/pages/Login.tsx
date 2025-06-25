@@ -34,7 +34,6 @@ export function Login() {
   });
 
   const onSubmit = async (data: LoginSchema) => {
-    // clearError();
     setIsSubmitting(true);
 
     await login({
@@ -48,7 +47,6 @@ export function Login() {
       toast.success("Login successful!");
       navigate("/");
     }
-
     setIsSubmitting(false);
   };
 
@@ -95,7 +93,11 @@ export function Login() {
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" {...register("password")} />
+                <Input
+                  id="password"
+                  type="password"
+                  {...register("password")}
+                />
                 {errors.password && (
                   <p className="text-sm text-red-500">
                     {errors.password.message}
