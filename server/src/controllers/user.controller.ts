@@ -135,7 +135,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     const user = await User.findById(userId)
         .populate("followers", "username profilePicture")
         .populate("following", "username profilePicture")
-        .select("-password -email -__v");
+        .select("-password -__v");
 
     if (!user) {
         throw new ApiError(404, "User not found");

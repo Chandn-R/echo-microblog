@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { authService } from "@/lib/services/authServices";
 
 interface User {
@@ -20,51 +21,78 @@ interface AuthState {
   setToken: (token: string) => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  isLoggedIn: false,
-  user: null,
-  token: null,
-  isLoading: true,
-  error: null,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      isLoggedIn: false,
+      user: null,
+      token: null,
+      isLoading: true,
+      error: null,
 
-  login: async (data) => {
-    set({ isLoading: true, error: null });
-    const result = await authService.login(data);
+      login: async (data) => {
+        set({ isLoading: true, error: null });
+        const result = await authService.login(data);
 
-    if (result.success) {
-      set({
-        isLoggedIn: true,
-        user: result.user,
-        token: result.token,
-        isLoading: false,
-      });
-    } else {
-      set({
-        isLoggedIn: false,
-        user: null,
-        token: null,
-        isLoading: false,
-        error: result.error || "Login failed",
-      });
+        if (result.success) {
+          set({
+            isLoggedIn: true,
+            user: result.user,
+            token: result.token,
+            isLoading: false,
+          });
+        } else {
+          set({
+            isLoggedIn: false,
+            user: null,
+            token: null,
+            isLoading: false,
+            error: result.error || "Login failed",
+          });
+        }
+      },
+
+      logout: async () => {
+        set({ isLoading: true });
+        await authService.logout();
+        set({
+          isLoggedIn: false,
+          user: null,
+          token: null,
+          isLoading: false,
+          error: null,
+        });
+      },
+
+      initializeAuth: async () => {
+        set({ isLoading: true });
+        try {
+          const result = await authService.refreshToken();
+
+          if (result.success) {
+            set({ token: result.token, isLoggedIn: true, isLoading: false });
+          } else {
+            set({
+              isLoggedIn: false,
+              user: null,
+              token: null,
+              isLoading: false,
+            });
+          }
+        } catch (err) {
+          set({ isLoggedIn: false, user: null, token: null, isLoading: false });
+        }
+      },
+
+      setToken: (token) => set({ token }),
+    }),
+    {
+      name: "auth-storage", // Key in localStorage
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
+      }),
     }
-  },
-
-  logout: async () => {
-    set({ isLoading: true });
-    await authService.logout();
-    set({ isLoggedIn: false, user: null, token: null, isLoading: false, error: null });
-  },
-
-  initializeAuth: async () => {
-    set({ isLoading: true });
-    const result = await authService.refreshToken();
-
-    if (result.success) {
-      set({ token: result.token, isLoggedIn: true, isLoading: false });
-    } else {
-      set({ isLoggedIn: false, user: null, token: null, isLoading: false });
-    }
-  },
-
-  setToken: (token) => set({ token }),
-}));
+  )
+);
