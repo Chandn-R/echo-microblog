@@ -1,27 +1,46 @@
 import { useAuthStore } from "@/stores/authStore";
-import { ProfileUpdate } from "@/pages/ProfileUpdate";
+import { ProfilePage } from "@/pages/ProfilePage";
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { api } from "@/lib/api";
 
 interface FullUserProfile {
   _id: string;
-  username: string;
-  name: string;
-  email:string;
-  bio?: string;
-  profilePicture?: {
-    secure_url: string;
-    public_id: string;
-  };
-  followers?: string[];
-  following?: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  isFollowing?: boolean;
+    name: string;
+    username: string;
+    email: string;
+    followers: Array<{
+      _id: string;
+      name: string;
+      username: string;
+      profilePicture?: {
+        secure_url: string;
+      };
+    }>;
+    following: string[];
+    bio: string;
+    profilePicture?: {
+      secure_url: string;
+    };
+    posts: Array<{
+      _id: string;
+      user: string;
+      content: Array<{
+        type: "text" | "image";
+        value: string;
+        public_id?: string;
+      }>;
+      likes: Array<string>;
+      comments: Array<string>;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    createdAt: string;
+    updatedAt: string;
+    isFollowing: boolean;
 }
 
-export const ProfileUpdatePageWrapper = () => {
+export const ProfileUpdateWrapper = () => {
   const { user, isLoggedIn } = useAuthStore();
   const [profile, setProfile] = useState<FullUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,5 +64,5 @@ export const ProfileUpdatePageWrapper = () => {
   if (loading) return <p>Loading profile...</p>;
   if (!profile) return <p>Failed to load profile</p>;
 
-  return <ProfileUpdate user={profile} />;
+  return <ProfilePage user={profile} />;
 };

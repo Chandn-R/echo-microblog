@@ -5,7 +5,9 @@ import Home from "@/pages/Home";
 import { Login } from "@/pages/Login";
 import { SignUp } from "@/pages/SignUp";
 import type { RouteObject } from "react-router-dom";
-import { ProfileUpdatePageWrapper } from "@/components/ProfileUpdatePageWrapper";
+import { ProfileUpdateWrapper } from "@/components/ProfileUpdateWrapper";
+import { UserProfileWrapper } from "@/components/UserProfileWrapper";
+import CleanLayout from "@/components/CleanLayout";
 
 export const routes: RouteObject[] = [
   {
@@ -21,16 +23,19 @@ export const routes: RouteObject[] = [
           </ProtectedRoute>
         ),
       },
-      {
-        path: "/user/:id",
-        element: (
-          <ProtectedRoute>
-            <ProfileUpdatePageWrapper/>
-          </ProtectedRoute>
-        ),
-      },
     ],
   },
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <SignUp /> },
+
+  {
+    path: "/user/:id",
+    element: <CleanLayout />,
+    children: [{ index: true, element: <ProfileUpdateWrapper /> }],
+  },
+  {
+    path: "/users/:id",
+    element: <CleanLayout />,
+    children: [{ index: true, element: <UserProfileWrapper /> }],
+  },
 ];

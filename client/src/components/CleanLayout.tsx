@@ -1,14 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from "@/assets/logo.svg";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, User, Search, PlusCircle, MessageSquare } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 
-function Layout() {
+function CleanLayout() {
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuthStore();
 
@@ -64,59 +61,11 @@ function Layout() {
           </button>
         </div>
       </aside>
-
-      <main className="flex-1 flex justify-center items-center max-w-4xl min-h-screen p-4">
+      <main className="flex-1 flex justify-center items-center max-w-full min-h-screen p-4">
         <Outlet />
       </main>
-
-      <div className="hidden lg:block w-64">
-        <div className="sticky top-0 h-screen p-4 space-y-6 overflow-y-auto">
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-base">Trending Threads</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-3">
-              {["#React", "#Shadcn", "#ThreadsClone", "#NextJS"].map((tag) => (
-                <div
-                  key={tag}
-                  className="flex items-center justify-between hover:bg-accent p-2 rounded cursor-pointer"
-                >
-                  <span className="text-sm">{tag}</span>
-                  <span className="text-xs text-muted-foreground">2.4k</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="">
-              <CardTitle className="text-base">Recommended</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-5">
-              {[1, 2, 3, 4].map((user) => (
-                <div key={user} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={`/avatars/suggested-${user}.png`} />
-                      <AvatarFallback>SU{user}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm">user_{user}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full h-8 text-xs"
-                  >
-                    Follow
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }
 
-export default Layout;
+export default CleanLayout;

@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { MessageCircle, Heart } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
 
 interface Post {
   _id: string;
@@ -44,6 +46,8 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuthStore();
 
   const fetchPosts = async (cursor?: string) => {
     try {
@@ -170,7 +174,19 @@ export default function Home() {
               <div className="flex-1 space-y-4 mt-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{post.user.username}</span>
+                    <span className="font-semibold">
+                      <button
+                        onClick={() => {
+                          if (!isLoggedIn) {
+                            navigate("/login");
+                          } else {
+                            navigate(`/users/${post.user._id}`);
+                          }
+                        }}
+                      >
+                        {post.user.username}
+                      </button>
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       · {formatDate(post.createdAt)}
                     </span>

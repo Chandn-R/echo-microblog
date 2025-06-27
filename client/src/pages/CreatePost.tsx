@@ -70,7 +70,7 @@ export function CreatePost() {
   };
 
   return (
-    <Card className="w-full max-w-2xl border-border shadow-sm hover:shadow-md transition-shadow">
+    <Card className="w-full max-w-xl border-border shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl font-semibold tracking-tight">
           Create Post
