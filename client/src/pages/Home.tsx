@@ -80,7 +80,7 @@ export default function Home() {
 
   const handleLike = async (postId: string) => {
     try {
-      await api.post(`/posts/${postId}/like`);
+      await api.patch(`/posts/${postId}/like`);
       setPosts((prev) =>
         prev.map((post) =>
           post._id === postId

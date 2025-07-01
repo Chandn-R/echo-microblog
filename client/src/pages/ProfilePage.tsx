@@ -15,7 +15,6 @@ import {
   LogOut,
   Edit,
   Trash2,
-  PlusCircle,
   Heart,
   MessageSquare,
   MoreHorizontal,
@@ -88,7 +87,7 @@ interface FormData {
 }
 
 export function ProfilePage({ user }: UserProfileProps) {
-  const { logout, user: currentUser } = useAuthStore();
+  const { logout } = useAuthStore();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
   const [profilePic, setProfilePic] = useState(user.profilePicture?.secure_url);
@@ -178,34 +177,6 @@ export function ProfilePage({ user }: UserProfileProps) {
     }
   };
 
-  const handleToggleFollow = async () => {
-    try {
-      const response = await api.post(
-        `/users/${user._id}/toggle-follow`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-
-      if (response.data.success) {
-        setUserData({
-          ...userData,
-          isFollowing: response.data.data.isFollowing,
-          followers: response.data.data.followers,
-        });
-        toast.success(
-          response.data.data.isFollowing
-            ? "Followed successfully"
-            : "Unfollowed successfully"
-        );
-      }
-    } catch (err) {
-      console.error("Error toggling follow:", err);
-      toast.error("Failed to toggle follow status");
-    }
-  };
-
   const handleLogout = async () => {
     await logout();
     navigate("/login");
@@ -218,8 +189,6 @@ export function ProfilePage({ user }: UserProfileProps) {
       day: "numeric",
     });
   };
-
-  const isCurrentUserProfile = currentUser?._id === user._id;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -236,18 +205,18 @@ export function ProfilePage({ user }: UserProfileProps) {
                       alt={user.username}
                     />
                     <AvatarFallback className="bg-muted text-4xl">
-                      {user.username.charAt(0).toUpperCase()}
+                      {userData.username.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="text-center">
-                  <CardTitle className="text-2xl">{user.name}</CardTitle>
+                  <CardTitle className="text-2xl">{userData.name}</CardTitle>
                   <CardDescription className="text-lg">
-                    @{user.username}
+                    @{userData.username}
                   </CardDescription>
                   {user.bio && (
                     <p className="mt-2 text-gray-600 dark:text-gray-300">
-                      {user.bio}
+                      {userData.bio}
                     </p>
                   )}
                 </div>
@@ -255,7 +224,7 @@ export function ProfilePage({ user }: UserProfileProps) {
               <CardContent className="space-y-4">
                 <div className="space-y-1">
                   <Label className="font-medium">Email</Label>
-                  <p>{user.email}</p>
+                  <p>{userData.email}</p>
                 </div>
 
                 <div className="flex justify-between pt-2">
@@ -274,195 +243,175 @@ export function ProfilePage({ user }: UserProfileProps) {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-2">
-                {isCurrentUserProfile ? (
-                  <>
-                    <Dialog
-                      open={isEditModalOpen}
-                      onOpenChange={setIsEditModalOpen}
-                    >
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full">
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                          <DialogTitle>Edit Profile</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex flex-col items-center gap-3 py-4">
-                          <Avatar className="h-24 w-24">
-                            <AvatarImage
-                              src={profilePic}
-                              className="h-full w-full object-cover rounded-full"
-                              alt={user.username}
-                            />
-                            <AvatarFallback className="bg-muted text-2xl">
-                              {user.username.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            type="button"
-                            onClick={handleChangePhotoClick}
-                          >
-                            Change Photo
-                          </Button>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={handleFileChange}
-                          />
-                        </div>
-                        <form
-                          onSubmit={handleSubmit(onSubmit)}
-                          className="space-y-4"
-                        >
-                          <div className="space-y-2">
-                            <Label htmlFor="username">Username</Label>
-                            <Input
-                              id="username"
-                              {...register("username", {
-                                required: "Username is required",
-                                minLength: {
-                                  value: 3,
-                                  message:
-                                    "Username must be at least 3 characters",
-                                },
-                              })}
-                            />
-                            {errors.username && (
-                              <p className="text-sm text-red-500">
-                                {errors.username.message}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Name</Label>
-                            <Input
-                              id="name"
-                              {...register("name", {
-                                required: "Name is required",
-                                minLength: {
-                                  value: 3,
-                                  message: "Name must be at least 3 characters",
-                                },
-                              })}
-                            />
-                            {errors.name && (
-                              <p className="text-sm text-red-500">
-                                {errors.name.message}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              {...register("email", {
-                                required: "Email is required",
-                                pattern: {
-                                  value:
-                                    /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                  message: "Invalid email address",
-                                },
-                              })}
-                            />
-                            {errors.email && (
-                              <p className="text-sm text-red-500">
-                                {errors.email.message}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="bio">Bio</Label>
-                            <Textarea
-                              id="bio"
-                              {...register("bio")}
-                              placeholder="Tell us about yourself..."
-                              rows={3}
-                            />
-                          </div>
-
-                          <div className="flex justify-end gap-3 pt-4">
-                            <Button
-                              variant="outline"
-                              type="button"
-                              onClick={() => setIsEditModalOpen(false)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              type="submit"
-                              disabled={isSubmitting || isUpdating}
-                            >
-                              {isSubmitting || isUpdating
-                                ? "Saving..."
-                                : "Save Changes"}
-                            </Button>
-                          </div>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                    <Button
-                      variant="destructive"
-                      onClick={handleLogout}
-                      className="w-full"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Log Out
+                <Dialog
+                  open={isEditModalOpen}
+                  onOpenChange={setIsEditModalOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Profile
                     </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant={user.isFollowing ? "outline" : "default"}
-                    onClick={handleToggleFollow}
-                    className="w-full"
-                  >
-                    {user.isFollowing ? "Following" : "Follow"}
-                  </Button>
-                )}
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle>Edit Profile</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center gap-6 py-4">
+                      <Avatar className="h-30 w-30">
+                        <AvatarImage
+                          src={profilePic}
+                          className="h-full w-full object-cover rounded-full"
+                          alt={user.username}
+                        />
+                        <AvatarFallback className="bg-muted text-2xl">
+                          {user.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        type="button"
+                        onClick={handleChangePhotoClick}
+                      >
+                        Change Photo
+                      </Button>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    <form
+                      onSubmit={handleSubmit(onSubmit)}
+                      className="space-y-6 p-3"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                          id="username"
+                          {...register("username", {
+                            required: "Username is required",
+                            minLength: {
+                              value: 3,
+                              message: "Username must be at least 3 characters",
+                            },
+                          })}
+                        />
+                        {errors.username && (
+                          <p className="text-sm text-red-500">
+                            {errors.username.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                          id="name"
+                          {...register("name", {
+                            required: "Name is required",
+                            minLength: {
+                              value: 3,
+                              message: "Name must be at least 3 characters",
+                            },
+                          })}
+                        />
+                        {errors.name && (
+                          <p className="text-sm text-red-500">
+                            {errors.name.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          {...register("email", {
+                            required: "Email is required",
+                            pattern: {
+                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                              message: "Invalid email address",
+                            },
+                          })}
+                        />
+                        {errors.email && (
+                          <p className="text-sm text-red-500">
+                            {errors.email.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bio">Bio</Label>
+                        <Textarea
+                          id="bio"
+                          {...register("bio")}
+                          placeholder="Tell us about yourself..."
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => setIsEditModalOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting || isUpdating}
+                        >
+                          {isSubmitting || isUpdating
+                            ? "Saving..."
+                            : "Save Changes"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  variant="destructive"
+                  onClick={handleLogout}
+                  className="w-full"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </Button>
               </CardFooter>
             </Card>
           </div>
         </div>
-        {/* Posts Section */}
+
         <div className="lg:col-span-2 space-y-6">
-          {isCurrentUserProfile && (
-            <>
-              <div className="lg:sticky lg:top-10 space-y-3">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold">My Posts</h2>
-                </div>
-                <Separator />
-              </div>
-            </>
-          )}
+          <div className="lg:sticky lg:top-10 space-y-3">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">My Posts</h2>
+            </div>
+            <Separator />
+          </div>
+
           <div className=" lg:max-h-[640px] overflow-y-auto">
             {user.posts.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
                   <p className="text-gray-500">
-                    {isCurrentUserProfile
-                      ? "You haven't created any posts yet."
-                      : "No posts yet."}
+                    "You haven't created any posts yet."
                   </p>
-                  {isCurrentUserProfile && (
-                    <Button
-                      variant="link"
-                      className="mt-2"
-                      onClick={() => navigate("/create-post")}
-                    >
-                      Create your first post
-                    </Button>
-                  )}
+
+                  <Button
+                    variant="link"
+                    className="mt-2"
+                    onClick={() => navigate("/create")}
+                  >
+                    Create your first post
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -497,32 +446,22 @@ export function ProfilePage({ user }: UserProfileProps) {
                             </div>
                           </div>
                         </div>
-                        {isCurrentUserProfile && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  navigate(`/edit-post/${post._id}`)
-                                }
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeletePost(post._id)}
-                                className="text-red-500"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() => handleDeletePost(post._id)}
+                              className="text-red-500"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </CardHeader>
                     <CardContent>

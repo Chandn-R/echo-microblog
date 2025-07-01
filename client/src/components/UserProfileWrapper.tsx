@@ -17,24 +17,31 @@ interface UserProfileProps {
       secure_url: string;
     };
   }>;
-  following: string[];
+  following: Array<{
+    _id: string;
+    name: string;
+    username: string;
+    profilePicture?: {
+      secure_url: string;
+    };
+  }>;
   bio: string;
   profilePicture?: {
     secure_url: string;
   };
   posts: Array<{
-  _id: string;
-  user: string;
-  content: Array<{
-    type: "text" | "image";
-    value: string;
-    public_id?: string;
+    _id: string;
+    user: string;
+    content: Array<{
+      type: "text" | "image";
+      value: string;
+      public_id?: string;
+    }>;
+    likes: Array<string>;
+    comments: Array<string>;
+    createdAt: string;
+    updatedAt: string;
   }>;
-  likes: Array<string>;
-  comments: Array<string>;
-  createdAt: string;
-  updatedAt: string;
-}>;
 
   createdAt: string;
   updatedAt: string;
@@ -52,7 +59,6 @@ export const UserProfileWrapper = () => {
         const res = await api.get(`/users/${id}`);
         setProfile(res.data.data);
         console.log(res.data.data);
-        
       } catch (err) {
         console.error("Failed to fetch profile", err);
       } finally {
