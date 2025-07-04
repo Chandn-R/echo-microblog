@@ -31,7 +31,10 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
         const file = files.find((f) => f.fieldname === `content[${i}][value]`);
         if (!file) throw new ApiError(400, `Image missing for block ${i}`);
 
-        const uploadedImage = await cloudinaryUpload(file.buffer, "post_images");
+        const uploadedImage = await cloudinaryUpload(
+          file.buffer,
+          "post_images"
+        );
         blocks.push({
           type: "image",
           value: uploadedImage.secure_url,
@@ -61,10 +64,15 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
       const value = req.body[`content[${index}][value]`];
 
       if (type === "image") {
-        const file = files.find((f) => f.fieldname === `content[${index}][value]`);
+        const file = files.find(
+          (f) => f.fieldname === `content[${index}][value]`
+        );
         if (!file) throw new ApiError(400, `Image missing for block ${index}`);
 
-        const uploadedImage = await cloudinaryUpload(file.buffer, "post_images");
+        const uploadedImage = await cloudinaryUpload(
+          file.buffer,
+          "post_images"
+        );
         blocks.push({
           type: "image",
           value: uploadedImage.secure_url,
@@ -88,10 +96,10 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
     content: blocks,
   });
 
-  res.status(201).json(new ApiResponses(201, post, "Post created successfully"));
+  res
+    .status(201)
+    .json(new ApiResponses(201, post, "Post created successfully"));
 });
-
-
 
 export const getPost = asyncHandler(async (req: Request, res: Response) => {
   const postId = req.params.id;
@@ -116,6 +124,7 @@ export const getPost = asyncHandler(async (req: Request, res: Response) => {
 
 export const deletePost = asyncHandler(async (req: Request, res: Response) => {
   const postId = req.params.id;
+  const user = req.user?._id;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     throw new ApiError(400, "Invalid post ID");
@@ -140,7 +149,7 @@ export const deletePost = asyncHandler(async (req: Request, res: Response) => {
   );
 
   await Post.findByIdAndDelete(postId);
-
+  logger.info(`Post ${postId} deleted by ${user._id}`);
   res.status(200).json(new ApiResponses(200, "Post deleted successfully"));
 });
 

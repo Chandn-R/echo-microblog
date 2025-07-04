@@ -216,12 +216,16 @@ export default function Home() {
                       size="sm"
                       className={`h-8 px-2 ${
                         post.isLiked
-                          ? "text-rose-500"
+                          ? "text-rose-500 "
                           : "text-muted-foreground hover:text-rose-500"
                       }`}
                       onClick={() => handleLike(post._id)}
                     >
-                      <Heart className="w-4 h-4 mr-1" />
+                      <Heart
+                        className="w-4 h-4 mr-1"
+                        fill={post.isLiked ? "currentColor" : "none"}
+                        stroke="currentColor"
+                      />
                       <span className="text-xs">{post.likeCount}</span>
                     </Button>
                     <Button

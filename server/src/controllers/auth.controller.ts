@@ -27,7 +27,6 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
   if (!newUser) {
     throw new ApiError(400, "User not created");
   }
-  logger.info("New user created");
   res.status(201).json(
     new ApiResponses(
       201,
@@ -40,6 +39,8 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       "User created"
     )
   );
+
+  logger.info(`New user ${newUser._id} created`);
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
@@ -89,12 +90,13 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user._id;
   res.clearCookie("refreshToken", {
     httpOnly: true,
     sameSite: "strict",
     path: "/api/auth/refresh",
   });
-  logger.info("User logged out");
+  logger.info(`User ${user._id}logged out`);
   res.status(200).json(new ApiResponses(200, null, "Logout successful"));
 });
 

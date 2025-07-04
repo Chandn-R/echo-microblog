@@ -1,7 +1,6 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
-// Define log levels
 const levels = {
   error: 0,
   warn: 1,
