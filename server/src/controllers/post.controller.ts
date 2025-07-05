@@ -262,11 +262,10 @@ export const deleteComment = asyncHandler(
 
 export const getPosts = asyncHandler(async (req: Request, res: Response) => {
   const { lastPostId, limit = 10 } = req.query;
-  const userId = req.user?._id; // Optional (for public/private access)
+  const userId = req.user?._id;
 
   const limitNum = Number(limit);
 
-  // Validate pagination inputs
   if (isNaN(limitNum) || limitNum < 1) {
     throw new ApiError(400, "Invalid limit value");
   }
@@ -277,13 +276,11 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
     matchStage._id = { $lt: new Types.ObjectId(lastPostId) };
   }
 
-  // Aggregation pipeline for optimized query
   const posts = await Post.aggregate([
     { $sort: { _id: -1 } },
     { $match: matchStage },
     { $limit: limitNum },
 
-    // Step 3: Add counts
     {
       $addFields: {
         likeCount: { $size: "$likes" },
@@ -293,7 +290,6 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
       },
     },
 
-    // Step 4: Populate user data
     {
       $lookup: {
         from: "users",
@@ -312,7 +308,6 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
     },
     { $unwind: "$user" }, // Convert user array to object
 
-    // Step 5: Populate comments.user
     {
       $lookup: {
         from: "users",
@@ -355,14 +350,11 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
       },
     },
 
-    // Step 6: Remove unnecessary fields
     { $project: { __v: 0, commentUsers: 0 } },
   ]);
 
-  // Get total count for pagination metadata
   const totalPosts = await Post.countDocuments();
 
-  logger.info("Posts retrieved successfully");
 
   res.status(200).json(
     new ApiResponses(

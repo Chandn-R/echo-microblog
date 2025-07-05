@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { jwtDecode } from "jwt-decode";
 import { authService } from "@/lib/services/authServices";
 
 interface User {
@@ -65,12 +66,34 @@ export const useAuthStore = create<AuthState>()(
       },
 
       initializeAuth: async () => {
+        const { token } = get();
+
+        if (token) {
+          try {
+            const { exp } = jwtDecode<{ exp: number }>(token);
+            const now = Date.now() / 1000;
+
+            if (exp > now) {
+              // Token still valid
+              set({ isLoggedIn: true, isLoading: false });
+              return;
+            }
+          } catch {
+            // Invalid token, continue to refresh
+          }
+        }
+
         set({ isLoading: true });
+
         try {
           const result = await authService.refreshToken();
 
           if (result.success) {
-            set({ token: result.token, isLoggedIn: true, isLoading: false });
+            set({
+              token: result.token,
+              isLoggedIn: true,
+              isLoading: false,
+            });
           } else {
             set({
               isLoggedIn: false,
@@ -80,14 +103,24 @@ export const useAuthStore = create<AuthState>()(
             });
           }
         } catch (err) {
-          set({ isLoggedIn: false, user: null, token: null, isLoading: false });
+          set({
+            isLoggedIn: false,
+            user: null,
+            token: null,
+            isLoading: false,
+          });
         }
       },
 
-      setToken: (token) => set({ token }),
+      setToken: (token) => {
+        set({
+          token,
+          isLoggedIn: !!token,
+        });
+      },
     }),
     {
-      name: "auth-storage", // Key in localStorage
+      name: "auth-storage",
       partialize: (state) => ({
         token: state.token,
         user: state.user,

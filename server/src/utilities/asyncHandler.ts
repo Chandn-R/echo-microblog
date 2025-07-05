@@ -12,6 +12,7 @@ const asyncHandler = (func: RequestHandler) => {
         message: err.message,
         success: false,
       });
+      console.log(err);
 
       logger.error(`Unexpected error occurred`, { error: err.message });
     }
