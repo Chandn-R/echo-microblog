@@ -17,11 +17,12 @@ type blockType = {
 export const createPost = asyncHandler(async (req: Request, res: Response) => {
   const currentUserId = req.user._id;
 
-  console.log("BODY:", req.body);
-  console.log("FILES:", req.files);
-
+  
   const files = req.files as Express.Multer.File[];
   const blocks: blockType[] = [];
+
+  // console.log("BODY:", req.body);
+  // console.log("FILES:", req.files);
 
   // Check if content is already an array in the body
   if (Array.isArray(req.body.content)) {
@@ -89,7 +90,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
-  console.log("Blocks after processing:", blocks);
+  // console.log("Blocks after processing:", blocks);
 
   const post = await Post.create({
     user: currentUserId,

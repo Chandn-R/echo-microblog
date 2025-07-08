@@ -151,7 +151,6 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   const userData = await User.aggregate([
     { $match: { _id: new mongoose.Types.ObjectId(userId) } },
 
-    // Remove sensitive fields
     {
       $project: {
         password: 0,
@@ -159,7 +158,6 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
       },
     },
 
-    // Lookup followers
     {
       $lookup: {
         from: "users",
@@ -170,7 +168,6 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
       },
     },
 
-    // Lookup following
     {
       $lookup: {
         from: "users",
@@ -181,12 +178,11 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
       },
     },
 
-    // Lookup posts
     {
       $lookup: {
         from: "posts",
         localField: "_id",
-        foreignField: "user", // or "author" depending on your schema
+        foreignField: "user",
         as: "posts",
       },
     },

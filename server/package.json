@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "nodemon dist/index.js",
     "build": "npx tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "k6 run dist/tests/testScript.js"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +32,7 @@
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/jwt-decode": "^2.2.1",
+    "@types/k6": "^1.1.1",
     "@types/multer": "^1.4.12",
     "@types/streamifier": "^0.1.2",
     "nodemon": "^3.1.10",
