@@ -1,19 +1,28 @@
 import http, { RefinedResponse } from "k6/http";
 import { check, sleep } from "k6";
 import { Options } from "k6/options";
+import { Trend } from "k6/metrics";
+export let responseTime = new Trend("response_time");
 
 export const options: Options = {
-  vus: 50,
-  duration: "60s",
-  // stages: [
-  //   { duration: "30s", target: 100 },
-  //   { duration: "1m", target: 200 },
-  //   { duration: "1m", target: 500 },
-  //   { duration: "30s", target: 0 },
-  // ],
+  stages: [
+    { duration: "30s", target: 20 },
+    { duration: "1m", target: 20 },
+
+    { duration: "30s", target: 50 },
+    { duration: "2m", target: 50 },
+
+    { duration: "30s", target: 100 },
+    { duration: "2m", target: 100 },
+
+    { duration: "30s", target: 150 },
+    { duration: "1m", target: 150 },
+
+    { duration: "30s", target: 0 },
+  ],
 };
 
-const BASE_URL = "http://localhost:8000/api";
+const BASE_URL = "http://:8000/api";
 const PASSWORD = "password123";
 
 interface LoginResponse {
@@ -39,6 +48,7 @@ export default function (): void {
     JSON.stringify({ email, password: PASSWORD }),
     { headers: { "Content-Type": "application/json" } }
   );
+  responseTime.add(loginRes.timings.duration);
 
   check(loginRes, {
     "login successful": (r) => r.status === 200,
@@ -51,6 +61,7 @@ export default function (): void {
   const postsRes = http.get(`${BASE_URL}/posts`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  responseTime.add(postsRes.timings.duration);
 
   check(postsRes, {
     "fetched posts": (r) => r.status === 200,
@@ -71,6 +82,7 @@ export default function (): void {
       Authorization: `Bearer ${token}`,
     },
   });
+  responseTime.add(postRes.timings.duration);
 
   check(postRes, {
     "post created": (r) => r.status === 201,
@@ -80,6 +92,7 @@ export default function (): void {
   const profileRes = http.get(`${BASE_URL}/users/${responseBody.data._id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  responseTime.add(profileRes.timings.duration);
 
   check(profileRes, {
     "fetched profile": (r) => r.status === 200,

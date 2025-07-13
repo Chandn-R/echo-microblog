@@ -5,7 +5,7 @@ import app from "./app.js";
 import connectDB from "./config/db.js";
 import logger from "./utilities/logger.js";
 
-const PORT = parseInt(process.env.PORT || "3000", 10);
+const PORT = parseInt(process.env.PORT || "8000", 10);
 
 connectDB()
   .then(() => {
