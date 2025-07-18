@@ -19,7 +19,7 @@ router.patch(
     upload.single("profilePicture"),
     updateProfile
 );
-router.get("/:id", protectRoute, getUser);
 router.get("/search", protectRoute, getAllUsers);
+router.get("/:id", protectRoute, getUser);
 
 export default router;
