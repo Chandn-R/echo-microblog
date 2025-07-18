@@ -85,8 +85,6 @@ userSchema.pre("save", async function (this: IUser, next) {
     next();
 });
 
-userSchema.index({ username: "text" });
-
 userSchema.methods.comparePassword = async function (
     this: IUser,
     password: string
