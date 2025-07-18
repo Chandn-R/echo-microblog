@@ -206,3 +206,34 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
       )
     );
 });
+
+export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
+  const query: string = req.query.query?.toString() || "";
+  const limit: number = parseInt(req.query.limit as string) || 10;
+  const lastId: string = req.query.lastId?.toString() || "";
+
+  const filter: any = {};
+  if (query) filter.$text = { $search: query };
+  if (lastId) filter._id = { $lt: new mongoose.Types.ObjectId(lastId) };
+
+  const users = await User.find(filter, { score: { $meta: "textScore" } })
+    .sort({ _id: -1 })
+    .limit(limit + 1);
+
+  const hasNextPage = users.length > limit;
+  if (hasNextPage) users.pop();
+
+  res.status(200).json(
+    new ApiResponses(
+      200,
+      {
+        users,
+        pagination: {
+          hasNextPage,
+          lastId: users.length ? users[users.length - 1]._id : null,
+        },
+      },
+      "Users retrieved successfully"
+    )
+  );
+});

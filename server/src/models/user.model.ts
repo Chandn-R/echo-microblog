@@ -21,56 +21,61 @@ export interface IUser extends mongoose.Document {
     generateRefreshToken(): string;
 }
 
-const userSchema = new mongoose.Schema<IUser>({
-    name: {
-        type: String,
-        required: true,
-    },
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        minlength: 4,
-        maxlength: 32,
-
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-    },
-    password: {
-        type: String,
-        required: true,
-        minlength: 6,
-
-    },
-    followers: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-    }],
-    following: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-    }],
-    profilePicture: {
-        secure_url: {
+const userSchema = new mongoose.Schema<IUser>(
+    {
+        name: {
+            type: String,
+            required: true,
+        },
+        username: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            minlength: 4,
+            maxlength: 32,
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            lowercase: true,
+        },
+        password: {
+            type: String,
+            required: true,
+            minlength: 6,
+        },
+        followers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        following: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        profilePicture: {
+            secure_url: {
+                type: String,
+                default: "",
+            },
+            public_id: {
+                type: String,
+                default: "",
+            },
+        },
+        bio: {
             type: String,
             default: "",
         },
-        public_id: {
-            type: String,
-            default: "",
-        },
     },
-    bio: {
-        type: String,
-        default: "",
-    },
-}, { timestamps: true });
+    { timestamps: true }
+);
 
 userSchema.pre("save", async function (this: IUser, next) {
     if (!this.isModified("password")) return next();
@@ -80,9 +85,14 @@ userSchema.pre("save", async function (this: IUser, next) {
     next();
 });
 
-userSchema.methods.comparePassword = async function (this: IUser, password: string): Promise<boolean> {
+userSchema.index({ username: "text" });
+
+userSchema.methods.comparePassword = async function (
+    this: IUser,
+    password: string
+): Promise<boolean> {
     return bcrypt.compare(password, this.password);
-}
+};
 
 userSchema.methods.generateAccessToken = function (this: IUser): string {
     return Jwt.sign(
@@ -94,10 +104,10 @@ userSchema.methods.generateAccessToken = function (this: IUser): string {
         },
         process.env.ACCESS_TOKEN_SECRET as string,
         {
-            expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY)
+            expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY),
         }
-    )
-}
+    );
+};
 
 userSchema.methods.generateRefreshToken = function () {
     return Jwt.sign(
@@ -106,10 +116,9 @@ userSchema.methods.generateRefreshToken = function () {
         },
         process.env.REFRESH_TOKEN_SECRET as string,
         {
-            expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY)
+            expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY),
         }
-    )
-}
+    );
+};
 
 export const User = mongoose.model<IUser>("User", userSchema);
-
