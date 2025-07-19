@@ -56,6 +56,7 @@ export const useAuthStore = create<AuthState>()(
             logout: async () => {
                 set({ isLoading: true });
                 await authService.logout();
+                sessionStorage.removeItem("tried-refresh");
                 set({
                     isLoggedIn: false,
                     user: null,
@@ -68,8 +69,9 @@ export const useAuthStore = create<AuthState>()(
             initializeAuth: async () => {
                 set({ isLoading: true });
                 const { token } = get();
+                const triedRefreshing = sessionStorage.getItem("tried-refresh");
 
-                if (!token) {
+                if (!token && triedRefreshing === "true") {
                     set({
                         isLoggedIn: false,
                         user: null,
@@ -80,17 +82,22 @@ export const useAuthStore = create<AuthState>()(
                 }
 
                 try {
-                    const { exp } = jwtDecode<{ exp: number }>(token);
-                    const isExpired = Date.now() / 1000 > exp;
+                    if (token) {
+                        const { exp } = jwtDecode<{ exp: number }>(token);
+                        const isExpired = Date.now() / 1000 > exp;
 
-                    if (!isExpired) {
-                        set({ isLoggedIn: true, isLoading: false });
-                        return;
+                        if (!isExpired) {
+                            set({ isLoggedIn: true, isLoading: false });
+                            return;
+                        }
+
+                        console.log(
+                            "Access token expired, attempting to refresh..."
+                        );
                     }
 
-                    console.log(
-                        "Access token expired, attempting to refresh..."
-                    );
+                    sessionStorage.setItem("tried-refresh", "true");
+
                     const result = await authService.refreshToken();
 
                     if (result.success && result.token) {
@@ -134,7 +141,7 @@ export const useAuthStore = create<AuthState>()(
             onRehydrateStorage: () => (state) => {
                 console.log("Zustand rehydrated. Now initializing auth...");
                 state?.initializeAuth();
-            }, 
+            },
         }
     )
 );
