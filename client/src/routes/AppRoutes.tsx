@@ -8,6 +8,7 @@ import type { RouteObject } from "react-router-dom";
 import { ProfileUpdateWrapper } from "@/components/ProfileUpdateWrapper";
 import { UserProfileWrapper } from "@/components/UserProfileWrapper";
 import CleanLayout from "@/components/CleanLayout";
+import SearchUser from "@/pages/SearchUser";
 
 export const routes: RouteObject[] = [
   {
@@ -37,5 +38,10 @@ export const routes: RouteObject[] = [
     path: "/users/:id",
     element: <CleanLayout />,
     children: [{ index: true, element: <UserProfileWrapper /> }],
+  },
+  {
+    path: "/search",
+    element: <CleanLayout />,
+    children: [{ index: true, element: <SearchUser /> }],
   },
 ];
