@@ -49,16 +49,6 @@ v
 
 ````
 
-### Content Schema Example:
-```ts
-content: [
-  { type: 'text', value: 'Hello world' },
-  { type: 'image', value: 'https://res.cloudinary.com/...' }
-]
-````
-
----
-
 ## 🚀 Getting Started
 
 ### 🧪 Run Locally
@@ -135,7 +125,7 @@ See [`test.js`](./test.js) for script.
 * Task definition uses public image
 * Security group allows port `8000`
 * VPC with public subnet
-* Tested on 1 vCPU / 3GB RAM instance
+* Tested on 2 vCPU / 6GB RAM instance
 
 ---
 
@@ -180,7 +170,8 @@ See [`test.js`](./test.js) for script.
 
 ## 🧑‍💻 Author
 
-**Chandan Chandan**
+**Chandan R**
 
-> B.Tech CS | MERN & Backend Dev | AWS & DevOps Enthusiast
-> [LinkedIn](https://linkedin.com/in/chandan--r)
+> B.Tech CSE | MERN & Backend Dev | AWS & DevOps Enthusiast
+
+> Connect with me on [LinkedIn](https://linkedin.com/in/chandan--r)
