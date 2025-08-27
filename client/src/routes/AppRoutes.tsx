@@ -9,6 +9,7 @@ import { ProfileUpdateWrapper } from "@/components/ProfileUpdateWrapper";
 import { UserProfileWrapper } from "@/components/UserProfileWrapper";
 import CleanLayout from "@/components/CleanLayout";
 import SearchUser from "@/pages/SearchUser";
+import ChatPage from "@/pages/ChatPage";
 
 export const routes: RouteObject[] = [
   {
@@ -43,5 +44,10 @@ export const routes: RouteObject[] = [
     path: "/search",
     element: <CleanLayout />,
     children: [{ index: true, element: <SearchUser /> }],
+  },
+  {
+    path: "/chat",
+    element: <CleanLayout />,
+    children: [{ index: true, element: <ChatPage /> }],
   },
 ];
