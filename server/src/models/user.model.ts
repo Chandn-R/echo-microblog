@@ -1,8 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcryptjs";
-import Jwt from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
 
-export interface IUser extends mongoose.Document {
+// 1. Interface for the plain data properties
+export interface IUserData {
     name: string;
     username: string;
     email: string;
@@ -14,19 +15,20 @@ export interface IUser extends mongoose.Document {
         public_id: string;
     };
     bio: string;
-    createdAt: Date;
-    updatedAt: Date;
+}
+
+export interface IUserMethods {
     comparePassword(password: string): Promise<boolean>;
     generateAccessToken(): string;
     generateRefreshToken(): string;
 }
 
-const userSchema = new mongoose.Schema<IUser>(
+// 3. The final Mongoose Model type combining data and methods
+export type UserModel = mongoose.Model<IUserData, {}, IUserMethods>;
+
+const userSchema = new Schema<IUserData, UserModel, IUserMethods>(
     {
-        name: {
-            type: String,
-            required: true,
-        },
+        name: { type: String, required: true },
         username: {
             type: String,
             required: true,
@@ -42,81 +44,58 @@ const userSchema = new mongoose.Schema<IUser>(
             trim: true,
             lowercase: true,
         },
-        password: {
-            type: String,
-            required: true,
-            minlength: 6,
-        },
-        followers: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User",
-            },
-        ],
-        following: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User",
-            },
-        ],
+        password: { type: String, required: true, minlength: 6 },
+        followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+        following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
         profilePicture: {
-            secure_url: {
-                type: String,
-                default: "",
-            },
-            public_id: {
-                type: String,
-                default: "",
-            },
+            secure_url: { type: String, default: "" },
+            public_id: { type: String, default: "" },
         },
-        bio: {
-            type: String,
-            default: "",
-        },
+        bio: { type: String, default: "" },
     },
     { timestamps: true }
 );
 
-userSchema.pre("save", async function (this: IUser, next) {
+userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
-
     this.password = await bcrypt.hash(this.password, 10);
-
     next();
 });
 
 userSchema.methods.comparePassword = async function (
-    this: IUser,
     password: string
 ): Promise<boolean> {
     return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken = function (this: IUser): string {
-    return Jwt.sign(
-        {
-            _id: this._id,
-            name: this.name,
-            username: this.username,
-            email: this.email,
-        },
-        process.env.ACCESS_TOKEN_SECRET as string,
-        {
-            expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY),
-        }
-    );
+userSchema.methods.generateAccessToken = function (): string {
+    const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+    const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRY;
+
+    if (!accessTokenSecret || !accessTokenExpiry) {
+        throw new Error(
+            "Access token secret or expiry is not defined in environment variables."
+        );
+    }
+
+    return jwt.sign({ _id: this._id }, accessTokenSecret, {
+        expiresIn: Number(accessTokenExpiry),
+    });
 };
 
-userSchema.methods.generateRefreshToken = function () {
-    return Jwt.sign(
-        {
-            _id: this._id,
-        },
-        process.env.REFRESH_TOKEN_SECRET as string,
-        {
-            expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY),
-        }
-    );
+userSchema.methods.generateRefreshToken = function (): string {
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+    const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRY;
+
+    if (!refreshTokenSecret || !refreshTokenExpiry) {
+        throw new Error(
+            "Refresh token secret or expiry is not defined in environment variables."
+        );
+    }
+
+    return jwt.sign({ _id: this._id }, refreshTokenSecret, {
+        expiresIn: Number(refreshTokenExpiry),
+    });
 };
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export const User = mongoose.model<IUserData, UserModel>("User", userSchema);
