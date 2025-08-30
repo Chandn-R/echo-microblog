@@ -1,4 +1,4 @@
-import { IUserData } from ".../models/user.model.js";
+import { IUserData } from ".../models/user.model";
 
 declare global {
     namespace Express {

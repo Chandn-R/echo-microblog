@@ -1,53 +1,45 @@
 import Layout from "@/components/Layout";
-import { ProtectedRoute } from "@/components/ProtectedRoutes";
+import ProtectedRoute from "@/components/ProtectedRoutes";
 import { CreatePost } from "@/pages/CreatePost";
 import Home from "@/pages/Home";
 import { Login } from "@/pages/Login";
 import { SignUp } from "@/pages/SignUp";
 import type { RouteObject } from "react-router-dom";
-import { ProfileUpdateWrapper } from "@/components/ProfileUpdateWrapper";
-import { UserProfileWrapper } from "@/components/UserProfileWrapper";
+import { ProfileUpdateWrapper } from "@/components/MyProfilePage";
+import { UserProfileWrapper } from "@/components/UserProfilePage";
 import CleanLayout from "@/components/CleanLayout";
 import SearchUser from "@/pages/SearchUser";
 import ChatPage from "@/pages/ChatPage";
 
 export const routes: RouteObject[] = [
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      { index: true, element: <Home /> },
-      {
-        path: "/create",
-        element: (
-          <ProtectedRoute>
-            <CreatePost />
-          </ProtectedRoute>
-        ),
-      },
-    ],
-  },
-  { path: "/login", element: <Login /> },
-  { path: "/signup", element: <SignUp /> },
+    { path: "/login", element: <Login /> },
+    { path: "/signup", element: <SignUp /> },
 
-  {
-    path: "/user/:id",
-    element: <CleanLayout />,
-    children: [{ index: true, element: <ProfileUpdateWrapper /> }],
-  },
-  {
-    path: "/users/:id",
-    element: <CleanLayout />,
-    children: [{ index: true, element: <UserProfileWrapper /> }],
-  },
-  {
-    path: "/search",
-    element: <CleanLayout />,
-    children: [{ index: true, element: <SearchUser /> }],
-  },
-  {
-    path: "/chat",
-    element: <CleanLayout />,
-    children: [{ index: true, element: <ChatPage /> }],
-  },
+    {
+        path: "/",
+        element: <Layout />,
+        children: [
+            { index: true, element: <Home /> },
+
+            {
+                element: <ProtectedRoute />,
+                children: [{ path: "create", element: <CreatePost /> }],
+            },
+        ],
+    },
+
+    {
+        element: <CleanLayout />,
+        children: [
+            {
+                element: <ProtectedRoute />,
+                children: [
+                    { path: "user/me", element: <ProfileUpdateWrapper /> }, // Specific route for the logged-in user's own profile
+                    { path: "users/:id", element: <UserProfileWrapper /> }, // Route for viewing other users' profiles
+                    { path: "search", element: <SearchUser /> },
+                    { path: "chat", element: <ChatPage /> },
+                ],
+            },
+        ],
+    },
 ];

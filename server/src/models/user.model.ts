@@ -2,8 +2,8 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 
-// 1. Interface for the plain data properties
 export interface IUserData {
+    _id: mongoose.Types.ObjectId;
     name: string;
     username: string;
     email: string;
@@ -23,7 +23,6 @@ export interface IUserMethods {
     generateRefreshToken(): string;
 }
 
-// 3. The final Mongoose Model type combining data and methods
 export type UserModel = mongoose.Model<IUserData, {}, IUserMethods>;
 
 const userSchema = new Schema<IUserData, UserModel, IUserMethods>(

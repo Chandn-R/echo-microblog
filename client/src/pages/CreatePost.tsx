@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { PlusCircle, X, Image as ImageIcon, Type, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { api } from "@/lib/api";
+import  api  from "@/services/api";
 
 type Block = { type: "text"; value: string } | { type: "image"; value: File };
 

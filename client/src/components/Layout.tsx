@@ -4,33 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, User, Search, PlusCircle, MessageSquare } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
-import { Outlet } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/stores/authStore";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 function Layout() {
     const navigate = useNavigate();
-    const { user, isLoggedIn } = useAuthStore();
+    const { user } = useAuth();
 
-    const handleViewProfile = () => {
-        if (!isLoggedIn) {
+    const protectedNavigate = (path: string) => {
+        if (!user) {
             navigate("/login");
         } else {
-            navigate(`/user/${user?._id}`);
-        }
-    };
-    const handleCreatePost = () => {
-        if (!isLoggedIn) {
-            navigate("/login");
-        } else {
-            navigate("/create");
-        }
-    };
-    const handleSearch = () => {
-        if (!isLoggedIn) {
-            navigate("/login");
-        } else {
-            navigate("/search");
+            console.log(user);
+            
+            navigate(path);
         }
     };
 
@@ -51,13 +38,13 @@ function Layout() {
                         <Home className="h-6 w-6" />
                     </button>
                     <button
-                        onClick={handleSearch}
+                        onClick={() => protectedNavigate("/search")}
                         className="rounded-lg h-12 ml-5 brightness-75 hover:brightness-125 w-12"
                     >
                         <Search className="h-6 w-6" />
                     </button>
                     <button
-                        onClick={handleCreatePost}
+                        onClick={() => protectedNavigate("/create")}
                         className="rounded-lg h-12 brightness-75 hover:brightness-125 ml-5 w-12"
                     >
                         <PlusCircle className="h-6 w-6" />
@@ -70,7 +57,12 @@ function Layout() {
                 <div className="flex flex-col py-4 gap-3 ml-8 ">
                     <ModeToggle />
                     <button className="rounded-lg h-12 brightness-75 hover:brightness-125 w-12">
-                        <User onClick={handleViewProfile} className="h-6 w-6" />
+                        <User
+                            onClick={() =>
+                                protectedNavigate(`/user/me`)
+                            }
+                            className="h-6 w-6"
+                        />
                     </button>
                 </div>
             </aside>

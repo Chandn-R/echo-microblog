@@ -6,6 +6,21 @@ import ApiResponses from "../utilities/apiResponses.js";
 import { User } from "../models/user.model.js";
 import cloudinaryUpload from "../utilities/cloudinary.js";
 
+export const currUser = asyncHandler(async (req: Request, res: Response) => {
+    const currentUserId = req.user._id;
+    console.log(currentUserId);
+    
+    const currentUser = await User.findById(currentUserId).select("-password");
+
+    if (!currentUser){
+        throw new ApiError(404, "User not found");
+    }
+
+    res.status(200).json(
+        new ApiResponses(200, currentUser, "Current user retrieved successfully")
+    )
+});
+
 export const followUser = asyncHandler(async (req: Request, res: Response) => {
     const userToFollowId = req.params.id;
     const currentUserId = req.user._id; // protectRoute middleware attaches user to req
@@ -142,6 +157,8 @@ export const updateProfile = asyncHandler(
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.params.id;
     const currentUserId = req.user._id;
+
+    console.log("Received userId from URL:", userId);
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new ApiError(400, "Invalid user ID");

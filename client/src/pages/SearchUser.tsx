@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { api } from "@/lib/api";
+import api from "@/services/api";
 import debounce from "lodash.debounce";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -179,8 +179,12 @@ const SearchUser: React.FC = () => {
                             </div>
 
                             {!isTyping && !loading && users.length > 0 && (
-                                <Badge variant="outline" className="px-3 py-1 text-sm">
-                                    {users.length} {users.length === 1 ? "result" : "results"}
+                                <Badge
+                                    variant="outline"
+                                    className="px-3 py-1 text-sm"
+                                >
+                                    {users.length}{" "}
+                                    {users.length === 1 ? "result" : "results"}
                                 </Badge>
                             )}
                         </div>
@@ -230,7 +234,10 @@ const SearchUser: React.FC = () => {
                     (isTyping && users.length === 0 && query.length > 0) ? (
                         <div className="divide-y">
                             {[...Array(limit)].map((_, i) => (
-                                <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
+                                <div
+                                    key={i}
+                                    className="flex items-center gap-4 p-4 animate-pulse"
+                                >
                                     <div className="h-10 w-10 bg-gray-200 rounded-full dark:bg-gray-700"></div>
                                     <div className="flex-1 space-y-2">
                                         <div className="h-4 bg-gray-200 rounded w-3/4 dark:bg-gray-700"></div>
@@ -243,12 +250,18 @@ const SearchUser: React.FC = () => {
                     ) : users.length > 0 ? (
                         <div className="divide-y">
                             {users.map((user) => (
-                                <div key={user._id} className="flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors group">
+                                <div
+                                    key={user._id}
+                                    className="flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors group"
+                                >
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Avatar className="h-10 w-10 border">
                                                 <AvatarImage
-                                                    src={user.profilePicture?.secure_url}
+                                                    src={
+                                                        user.profilePicture
+                                                            ?.secure_url
+                                                    }
                                                     alt={user.name}
                                                     className="object-cover"
                                                 />
@@ -272,21 +285,33 @@ const SearchUser: React.FC = () => {
                                             </h3>
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <span className="truncate">@{user.username}</span>
-                                            <span className="text-gray-400">•</span>
+                                            <span className="truncate">
+                                                @{user.username}
+                                            </span>
+                                            <span className="text-gray-400">
+                                                •
+                                            </span>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <div className="flex items-center gap-1 truncate">
                                                         <Mail className="h-3.5 w-3.5 flex-shrink-0" />
-                                                        <span className="truncate">{user.email}</span>
+                                                        <span className="truncate">
+                                                            {user.email}
+                                                        </span>
                                                     </div>
                                                 </TooltipTrigger>
-                                                <TooltipContent>{user.email}</TooltipContent>
+                                                <TooltipContent>
+                                                    {user.email}
+                                                </TooltipContent>
                                             </Tooltip>
                                         </div>
                                     </div>
 
-                                    <Button variant="ghost" size="sm" className="shrink-0">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="shrink-0"
+                                    >
                                         View Profile
                                     </Button>
                                 </div>
@@ -299,7 +324,9 @@ const SearchUser: React.FC = () => {
                             <div className="flex flex-col items-center justify-center py-16 text-center px-4">
                                 <Search className="h-12 w-12 text-muted-foreground mb-4" />
                                 <h3 className="text-lg font-medium">
-                                    {query ? "No matching users found" : "No users available"}
+                                    {query
+                                        ? "No matching users found"
+                                        : "No users available"}
                                 </h3>
                                 <p className="text-muted-foreground mt-2 max-w-md">
                                     {query
@@ -313,17 +340,26 @@ const SearchUser: React.FC = () => {
                     {loading && !initialLoad && users.length > 0 && (
                         <div className="flex flex-col items-center justify-center py-12 gap-2">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Loading more users...</p>
+                            <p className="text-sm text-muted-foreground">
+                                Loading more users...
+                            </p>
                         </div>
                     )}
 
-                    <div ref={observerRef} style={{ height: "1px" }} aria-hidden="true" />
+                    <div
+                        ref={observerRef}
+                        style={{ height: "1px" }}
+                        aria-hidden="true"
+                    />
 
                     {!hasMore && !loading && users.length > 0 && (
                         <div className="flex flex-col items-center justify-center p-6 gap-1 border-t">
-                            <p className="text-sm text-muted-foreground">You've reached the end of the list</p>
+                            <p className="text-sm text-muted-foreground">
+                                You've reached the end of the list
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                                Showing all {users.length} {users.length === 1 ? "user" : "users"}
+                                Showing all {users.length}{" "}
+                                {users.length === 1 ? "user" : "users"}
                             </p>
                         </div>
                     )}
