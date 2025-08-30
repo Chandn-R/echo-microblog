@@ -30,12 +30,15 @@ app.use(cookieParser());
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
+import chatRoutes from "./routes/chat.route.js";
 
 app.use(requestLogger);
+
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/chat", chatRoutes);
 app.use(errorLogger);
 
 export default app;

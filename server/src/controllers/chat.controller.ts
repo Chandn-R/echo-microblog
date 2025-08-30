@@ -36,4 +36,12 @@ export const fetchFriends = asyncHandler(async (req: Request, res: Response) => 
         // 5. Replace the root to show just the user document
         { $replaceRoot: { newRoot: { $arrayElemAt: ["$mutual_user_details", 0] } } }
     ]);
+
+    res.status(200).json(
+        new ApiResponses(
+            200,
+            { friends },
+            "Fetched friends successfully"
+        )
+    );
 });
