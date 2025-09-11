@@ -18,6 +18,7 @@ const chatSchema = new Schema<IChatData>(
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User",
+                index: true,
             },
         ],
         latestMessage: {

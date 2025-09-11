@@ -4,21 +4,25 @@ import cookieParser from "cookie-parser";
 import { requestLogger, errorLogger } from "./middlewares/logging.js";
 import http from "http";
 import { Server } from "socket.io";
+import { initializeSocketIO } from "./socketio.js";
 
 const app = express();
-const server = http.createServer(app);
+export const server = http.createServer(app);
 export const io = new Server(server, {
     cors: {
         origin: "http://localhost:5173",
         methods: ["GET", "POST"],
     },
 });
+initializeSocketIO(io);
+
+// middlewares
 
 app.use(
     cors({
-        origin: "http://localhost:5173", // Your frontend URL
+        origin: "http://localhost:5173",
         // methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        // allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
     })
 );
@@ -31,6 +35,7 @@ import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import messageRoutes from "./routes/message.route.js"
 
 app.use(requestLogger);
 
@@ -39,6 +44,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/message", messageRoutes);
+
 app.use(errorLogger);
 
 export default app;

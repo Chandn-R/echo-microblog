@@ -6,43 +6,48 @@ import {
     type ReactNode,
 } from "react";
 import toast from "react-hot-toast";
-import api from "../services/api";
+// Import our new service
+import api, { setApiAccessToken } from "../services/api";
 
+// User and AuthContextType interfaces remain the same
 interface User {
-    profilePicture?: {
-        secure_url: string;
-    };
     _id: string;
     name: string;
     username: string;
     email: string;
     bio?: string;
+    profilePicture?: {
+        secure_url: string;
+    };
 }
 
-interface AuthContextType {
+export interface AuthContextType {
     user: User | null;
-    accessToken: string | null;
     login: (data: { email: string; password: string }) => Promise<void>;
     logout: () => void;
     isLoading: boolean;
+    // We no longer need to expose accessToken directly from context
+    // The interceptor handles it automatically
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [accessToken, setAccessToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchUserDetails = async (token: string) => {
+    // This function can now be simplified
+    const fetchUserDetails = async () => {
         try {
-            const response = await api.get("/users/me", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            // No need to pass token, the interceptor adds it!
+            const response = await api.get("/users/me");
             setUser(response.data.data);
         } catch (error) {
             console.error("Failed to fetch user details", error);
-            await logout();
+            // If this fails, the interceptor might have already logged us out
+            // but we ensure the user state is null
+            setUser(null);
+            setApiAccessToken(null); // Clear token in the api service
         }
     };
 
@@ -50,15 +55,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const checkAuthStatus = async () => {
             try {
                 const response = await api.post("/auth/refresh");
-                console.log("RESPONSE FROM /AUTH/REFRESH ", response.data);
-
                 const newAccessToken = response.data.data.accessToken;
-                console.log("RECIEVED ACC TOKN ", newAccessToken);
-                setAccessToken(newAccessToken);
-                await fetchUserDetails(newAccessToken);
+                
+                // Set the token in our API service
+                setApiAccessToken(newAccessToken);
+                
+                // Fetch user details with the new token
+                await fetchUserDetails();
             } catch (error) {
                 setUser(null);
-                setAccessToken(null);
+                setApiAccessToken(null); // Ensure token is cleared on failure
             } finally {
                 setIsLoading(false);
             }
@@ -72,8 +78,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const response = await api.post("/auth/login", data);
             const newAccessToken = response.data.data.accessToken;
 
-            setAccessToken(newAccessToken);
-            await fetchUserDetails(newAccessToken);
+            // Set the token in our API service
+            setApiAccessToken(newAccessToken);
+            
+            // Fetch user details
+            await fetchUserDetails();
 
             toast.success("Login successful!");
         } catch (error: any) {
@@ -87,23 +96,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             await api.post("/auth/logout");
         } catch (error) {
-            console.error(
-                "Logout API call failed, but clearing session anyway."
-            );
+            console.error("Logout API call failed, but clearing session anyway.");
         } finally {
             setUser(null);
-            setAccessToken(null);
+            // Clear the token in our API service
+            setApiAccessToken(null);
         }
     };
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <div>Loading...</div>; // Or a spinner component
     }
 
     return (
-        <AuthContext.Provider
-            value={{ user, accessToken, login, logout, isLoading }}
-        >
+        <AuthContext.Provider value={{ user, login, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
