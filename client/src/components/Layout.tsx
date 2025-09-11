@@ -16,7 +16,7 @@ function Layout() {
             navigate("/login");
         } else {
             console.log(user);
-            
+
             navigate(path);
         }
     };
@@ -49,7 +49,10 @@ function Layout() {
                     >
                         <PlusCircle className="h-6 w-6" />
                     </button>
-                    <button className="rounded-lg h-12 brightness-75 hover:brightness-125 ml-5 w-12">
+                    <button
+                        onClick={() => protectedNavigate("/chat")}
+                        className="rounded-lg h-12 brightness-75 hover:brightness-125 ml-5 w-12"
+                    >
                         <MessageSquare className="h-6 w-6" />
                     </button>
                 </nav>
@@ -58,9 +61,7 @@ function Layout() {
                     <ModeToggle />
                     <button className="rounded-lg h-12 brightness-75 hover:brightness-125 w-12">
                         <User
-                            onClick={() =>
-                                protectedNavigate(`/user/me`)
-                            }
+                            onClick={() => protectedNavigate(`/user/me`)}
                             className="h-6 w-6"
                         />
                     </button>

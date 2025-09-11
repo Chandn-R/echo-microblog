@@ -6,10 +6,8 @@ import {
     type ReactNode,
 } from "react";
 import toast from "react-hot-toast";
-// Import our new service
 import api, { setApiAccessToken } from "../services/api";
 
-// User and AuthContextType interfaces remain the same
 interface User {
     _id: string;
     name: string;
@@ -26,8 +24,6 @@ export interface AuthContextType {
     login: (data: { email: string; password: string }) => Promise<void>;
     logout: () => void;
     isLoading: boolean;
-    // We no longer need to expose accessToken directly from context
-    // The interceptor handles it automatically
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -36,18 +32,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // This function can now be simplified
     const fetchUserDetails = async () => {
         try {
-            // No need to pass token, the interceptor adds it!
             const response = await api.get("/users/me");
             setUser(response.data.data);
         } catch (error) {
             console.error("Failed to fetch user details", error);
-            // If this fails, the interceptor might have already logged us out
-            // but we ensure the user state is null
             setUser(null);
-            setApiAccessToken(null); // Clear token in the api service
+            setApiAccessToken(null);
         }
     };
 
@@ -56,16 +48,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             try {
                 const response = await api.post("/auth/refresh");
                 const newAccessToken = response.data.data.accessToken;
-                
-                // Set the token in our API service
+
                 setApiAccessToken(newAccessToken);
-                
-                // Fetch user details with the new token
+
                 await fetchUserDetails();
             } catch (error) {
                 setUser(null);
-                setApiAccessToken(null); // Ensure token is cleared on failure
+                setApiAccessToken(null);
             } finally {
+                console.log("Auth check finished. Setting isLoading to false.");
                 setIsLoading(false);
             }
         };
@@ -78,10 +69,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const response = await api.post("/auth/login", data);
             const newAccessToken = response.data.data.accessToken;
 
-            // Set the token in our API service
             setApiAccessToken(newAccessToken);
-            
-            // Fetch user details
+
             await fetchUserDetails();
 
             toast.success("Login successful!");
@@ -96,16 +85,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             await api.post("/auth/logout");
         } catch (error) {
-            console.error("Logout API call failed, but clearing session anyway.");
+            console.error(
+                "Logout API call failed, but clearing session anyway."
+            );
         } finally {
             setUser(null);
-            // Clear the token in our API service
             setApiAccessToken(null);
         }
     };
 
     if (isLoading) {
-        return <div>Loading...</div>; // Or a spinner component
+        return <div>Loading...</div>;
     }
 
     return (

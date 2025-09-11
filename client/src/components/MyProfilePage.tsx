@@ -52,10 +52,10 @@ export const ProfileUpdateWrapper = () => {
         }
         const fetchProfile = async () => {
             try {
-                console.log(" Fetching",user);
-                
+                console.log(" Fetching", user);
+
                 console.log("Fetching profile for user ID:", user._id);
-                
+
                 const res = await api.get(`/users/${user._id}`);
                 setProfile(res.data.data);
             } catch (err) {

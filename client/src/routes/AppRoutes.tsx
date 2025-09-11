@@ -9,7 +9,7 @@ import { ProfileUpdateWrapper } from "@/components/MyProfilePage";
 import { UserProfileWrapper } from "@/components/UserProfilePage";
 import CleanLayout from "@/components/CleanLayout";
 import SearchUser from "@/pages/SearchUser";
-import ChatPage from "@/pages/ChatPage";
+import { ChatPage } from "@/components/chat/ChatPage";
 
 export const routes: RouteObject[] = [
     { path: "/login", element: <Login /> },
@@ -34,8 +34,8 @@ export const routes: RouteObject[] = [
             {
                 element: <ProtectedRoute />,
                 children: [
-                    { path: "user/me", element: <ProfileUpdateWrapper /> }, // Specific route for the logged-in user's own profile
-                    { path: "users/:id", element: <UserProfileWrapper /> }, // Route for viewing other users' profiles
+                    { path: "user/me", element: <ProfileUpdateWrapper /> },
+                    { path: "users/:id", element: <UserProfileWrapper /> },
                     { path: "search", element: <SearchUser /> },
                     { path: "chat", element: <ChatPage /> },
                 ],

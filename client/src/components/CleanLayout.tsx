@@ -48,7 +48,7 @@ function CleanLayout() {
                         <PlusCircle className="h-6 w-6" />
                     </button>
                     <button
-                        onClick={() => protectedNavigate("/messages")}
+                        onClick={() => protectedNavigate("/chat")}
                         className="rounded-lg h-12 brightness-75 hover:brightness-125 ml-5 w-12"
                     >
                         <MessageSquare className="h-6 w-6" />
@@ -60,9 +60,7 @@ function CleanLayout() {
                     <button className="rounded-lg h-12 brightness-75 hover:brightness-125 w-12">
                         <User
                             // 4. Use the helper and the user ID from the context
-                            onClick={() =>
-                                protectedNavigate(`/users/${user?._id}`)
-                            }
+                            onClick={() => protectedNavigate("/user/me")}
                             className="h-6 w-6"
                         />
                     </button>

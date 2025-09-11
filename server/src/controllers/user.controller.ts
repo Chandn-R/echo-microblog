@@ -8,11 +8,9 @@ import cloudinaryUpload from "../utilities/cloudinary.js";
 
 export const currUser = asyncHandler(async (req: Request, res: Response) => {
     const currentUserId = req.user._id;
-    console.log(currentUserId);
-    
     const currentUser = await User.findById(currentUserId).select("-password");
 
-    if (!currentUser){
+    if (!currentUser) {
         throw new ApiError(404, "User not found");
     }
 
@@ -52,107 +50,103 @@ export const followUser = asyncHandler(async (req: Request, res: Response) => {
     );
 });
 
-export const unfollowUser = asyncHandler(
-    async (req: Request, res: Response) => {
-        const userToUnfollowId = req.params.id;
-        const currentUserId = req.user._id;
+export const unfollowUser = asyncHandler(async (req: Request, res: Response) => {
+    const userToUnfollowId = req.params.id;
+    const currentUserId = req.user._id;
 
-        if (userToUnfollowId === currentUserId.toString()) {
-            throw new ApiError(400, "You cannot unfollow yourself");
-        }
-
-        const userToUnfollow = await User.findById(userToUnfollowId);
-        const currentUser = await User.findById(currentUserId);
-
-        if (!userToUnfollow || !currentUser) {
-            throw new ApiError(404, "User not found");
-        }
-
-        const isFollowing = currentUser.following.some(
-            (id) => id.toString() === userToUnfollowId
-        );
-
-        if (!isFollowing) {
-            throw new ApiError(400, "You are not following this user");
-        }
-
-        currentUser.following = currentUser.following.filter(
-            (id) => id.toString() !== userToUnfollowId
-        );
-
-        userToUnfollow.followers = userToUnfollow.followers.filter(
-            (id) => id.toString() !== currentUserId.toString()
-        );
-
-        await currentUser.save();
-        await userToUnfollow.save();
-
-        res.status(200).json(
-            new ApiResponses(200, null, `Unfollowed ${userToUnfollow.username}`)
-        );
+    if (userToUnfollowId === currentUserId.toString()) {
+        throw new ApiError(400, "You cannot unfollow yourself");
     }
-);
 
-export const updateProfile = asyncHandler(
-    async (req: Request, res: Response) => {
-        const currentUserId = req.user._id;
-        const { name, username, bio, email } = req.body;
-        const profilePicture = req.file as Express.Multer.File;
+    const userToUnfollow = await User.findById(userToUnfollowId);
+    const currentUser = await User.findById(currentUserId);
 
-        const user = await User.findById(currentUserId);
-        if (!user) {
-            throw new ApiError(404, "User not found");
-        }
-
-        if (username && username !== user.username) {
-            const existingUser = await User.findOne({ username });
-            if (
-                existingUser &&
-                (existingUser._id as mongoose.Types.ObjectId).toString() !==
-                    currentUserId.toString()
-            ) {
-                throw new ApiError(400, "Username is already taken");
-            }
-        }
-
-        if (email && email !== user.email) {
-            const existingEmail = await User.findOne({ email });
-            if (
-                existingEmail &&
-                (existingEmail._id as mongoose.Types.ObjectId).toString() !==
-                    currentUserId.toString()
-            ) {
-                throw new ApiError(400, "Email is already in use");
-            }
-        }
-
-        if (profilePicture) {
-            try {
-                console.log(profilePicture.buffer);
-
-                const uploadedImageUrl = await cloudinaryUpload(
-                    profilePicture.buffer,
-                    "profile_pictures"
-                );
-                user.profilePicture = uploadedImageUrl;
-            } catch (error) {
-                console.error("Cloudinary upload failed:", error);
-                throw new ApiError(500, "Failed to upload profile picture");
-            }
-        }
-
-        if (name) user.name = name;
-        if (username) user.username = username;
-        if (bio) user.bio = bio;
-        if (email) user.email = email;
-
-        await user.save();
-
-        res.status(200).json(
-            new ApiResponses(200, user, "Profile updated successfully")
-        );
+    if (!userToUnfollow || !currentUser) {
+        throw new ApiError(404, "User not found");
     }
-);
+
+    const isFollowing = currentUser.following.some(
+        (id) => id.toString() === userToUnfollowId
+    );
+
+    if (!isFollowing) {
+        throw new ApiError(400, "You are not following this user");
+    }
+
+    currentUser.following = currentUser.following.filter(
+        (id) => id.toString() !== userToUnfollowId
+    );
+
+    userToUnfollow.followers = userToUnfollow.followers.filter(
+        (id) => id.toString() !== currentUserId.toString()
+    );
+
+    await currentUser.save();
+    await userToUnfollow.save();
+
+    res.status(200).json(
+        new ApiResponses(200, null, `Unfollowed ${userToUnfollow.username}`)
+    );
+});
+
+export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+    const currentUserId = req.user._id;
+    const { name, username, bio, email } = req.body;
+    const profilePicture = req.file as Express.Multer.File;
+
+    const user = await User.findById(currentUserId);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (username && username !== user.username) {
+        const existingUser = await User.findOne({ username });
+        if (
+            existingUser &&
+            (existingUser._id as mongoose.Types.ObjectId).toString() !==
+            currentUserId.toString()
+        ) {
+            throw new ApiError(400, "Username is already taken");
+        }
+    }
+
+    if (email && email !== user.email) {
+        const existingEmail = await User.findOne({ email });
+        if (
+            existingEmail &&
+            (existingEmail._id as mongoose.Types.ObjectId).toString() !==
+            currentUserId.toString()
+        ) {
+            throw new ApiError(400, "Email is already in use");
+        }
+    }
+
+    if (profilePicture) {
+        try {
+            console.log(profilePicture.buffer);
+
+            const uploadedImageUrl = await cloudinaryUpload(
+                profilePicture.buffer,
+                "profile_pictures"
+            );
+            user.profilePicture = uploadedImageUrl;
+        } catch (error) {
+            console.error("Cloudinary upload failed:", error);
+            throw new ApiError(500, "Failed to upload profile picture");
+        }
+    }
+
+    if (name) user.name = name;
+    if (username) user.username = username;
+    if (bio) user.bio = bio;
+    if (email) user.email = email;
+
+    await user.save();
+
+    res.status(200).json(
+        new ApiResponses(200, user, "Profile updated successfully")
+    );
+});
 
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.params.id;

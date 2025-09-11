@@ -5,7 +5,6 @@ import { Message } from "../models/message.model.js";
 import { Chat } from "../models/chat.model.js";
 import { io } from "../app.js";
 
-// @route   POST /api/message
 export const sendMessage = asyncHandler(async (req, res) => {
     const { content, chatId } = req.body;
 
@@ -20,7 +19,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
     };
 
     let message = await Message.create(newMessageData);
-
     message = await message.populate("sender", "name profilePicture");
     message = await message.populate("chat");
     message = await Message.populate(message, {
@@ -32,14 +30,12 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
     (message.chat as any).users.forEach((user: any) => {
         if (user._id.toString() === req.user._id.toString()) return;
-
         io.to(user._id.toString()).emit("receiveMessage", message);
     });
 
     res.status(201).json(new ApiResponses(201, message, "Message sent successfully"));
 });
 
-// @route   GET /api/message/:chatId
 export const fetchMessages = asyncHandler(async (req, res) => {
     const { chatId } = req.params;
 

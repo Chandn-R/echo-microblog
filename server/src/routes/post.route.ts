@@ -10,7 +10,6 @@ import {
   getPosts,
 } from "../controllers/post.controller";
 import { upload } from "../middlewares/multer.js";
-import { fetchFriends } from "../controllers/chat.controller";
 
 const router = express.Router();
 

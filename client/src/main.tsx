@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/context/AuthContext";
-import { InterceptorManager } from "@/components/InterceptorManager";
+import { SocketProvider } from "./components/SocketProvider.tsx";
 
 import App from "./App.tsx";
 import { ErrorBoundary } from "./lib/ErrorBoundary.tsx";
@@ -16,9 +16,9 @@ createRoot(document.getElementById("root")!).render(
             <BrowserRouter>
                 <ErrorBoundary>
                     <AuthProvider>
-                        <InterceptorManager>
+                        <SocketProvider>
                             <App />
-                        </InterceptorManager>
+                        </SocketProvider>
                     </AuthProvider>
                 </ErrorBoundary>
             </BrowserRouter>

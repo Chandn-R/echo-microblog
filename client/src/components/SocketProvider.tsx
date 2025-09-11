@@ -32,7 +32,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
             });
 
             setSocket(newSocket);
-
             newSocket.emit("setup", user);
             newSocket.on("connected", () => {
                 console.log("Socket connected successfully:", newSocket.id);

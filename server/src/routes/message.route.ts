@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { 
-    sendMessage, 
-    fetchMessages 
+import {
+    sendMessage,
+    fetchMessages
 } from "../controllers/message.controller.js";
 import { protectRoute } from "../middlewares/protectRoutes.js";
 

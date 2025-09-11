@@ -5,47 +5,7 @@ import ApiResponses from "../utilities/apiResponses.js";
 import { User } from "../models/user.model.js";
 import { Chat } from "../models/chat.model.js";
 
-
-export const fetchFriends = asyncHandler(async (req: Request, res: Response) => {
-    const curUser = req.user._id;
-
-    const friends = await User.aggregate([
-
-        { $match: { _id: curUser } },
-
-        {
-            $project: {
-                mutuals: { $setIntersection: ["$following", "$followers"] },
-                _id: 0
-            }
-        },
-
-        { $unwind: "$mutuals" },
-
-        {
-            $lookup: {
-                from: "user",
-                localField: "mutuals",
-                foreignField: "_id",
-                as: "mutual_user_details"
-            }
-        },
-
-        { $replaceRoot: { newRoot: { $arrayElemAt: ["$mutual_user_details", 0] } } }
-    ]);
-
-    res.status(200).json(
-        new ApiResponses(
-            200,
-            { friends },
-            "Fetched friends successfully"
-        )
-    );
-});
-
-// @desc    Access an existing 1-on-1 chat or create a new one
-// @route   POST /api/chat
-export const accessOrCreateChat = asyncHandler(async (req, res) => {
+export const accessOrCreateChat = asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.body;
 
     if (!userId) {
@@ -85,18 +45,34 @@ export const accessOrCreateChat = asyncHandler(async (req, res) => {
     }
 });
 
-// @route   GET /api/chat
-export const fetchChats = asyncHandler(async (req, res) => {
+
+export const getSidebarData = asyncHandler(async (req: Request, res: Response) => {
     let chats = await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
-        .populate("users", "-password")
-        .populate("groupAdmin", "-password")
+        .populate("users", "_id name username profilePicture")
         .populate("latestMessage")
         .sort({ updatedAt: -1 });
 
     chats = await Chat.populate(chats, {
         path: "latestMessage.sender",
-        select: "name profilePicture email",
+        select: "name",
     });
 
-    res.status(200).json(new ApiResponses(200, chats, "Chats fetched successfully"));
+    const userIdsInChats = new Set();
+    chats.forEach(chat => {
+        chat.users.forEach(user => {
+            if (user._id.toString() !== req.user._id.toString()) {
+                userIdsInChats.add(user._id.toString());
+            }
+        });
+    });
+
+    const friends = await User.find({ _id: { $in: req.user.following } })
+        .where('followers').equals(req.user._id)
+        .select("_id name username profilePicture");
+
+    const friendsToChatWith = friends.filter(friend => !userIdsInChats.has(friend._id.toString()));
+
+    res.status(200).json(
+        new ApiResponses(200, { chats, friendsToChatWith }, "Sidebar data fetched successfully")
+    );
 });

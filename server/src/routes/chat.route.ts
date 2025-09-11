@@ -1,16 +1,15 @@
 import { Router } from "express";
-import { 
-    accessOrCreateChat, 
-    fetchChats, 
-    fetchFriends 
+import {
+    accessOrCreateChat,
+    getSidebarData
 } from "../controllers/chat.controller.js";
 import { protectRoute } from "../middlewares/protectRoutes";
 
 const router = Router();
 
-router.use(protectRoute); 
+router.use(protectRoute);
 
-router.route("/").post(accessOrCreateChat).get(fetchChats);
-router.route("/friends").get(fetchFriends);
+router.route("/").post(accessOrCreateChat)
+router.route("/sidebar").get(getSidebarData);
 
 export default router;

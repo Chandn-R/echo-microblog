@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChatList } from "./ChatList";
-import { ChatWindow } from "./ChatWindow";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
-
+import { useSocket } from "../SocketProvider";
+import { ChatList } from "./ChatList";
+import { ChatWindow } from "./ChatWindow";
 
 export interface User {
     _id: string;
@@ -17,148 +16,149 @@ export interface Message {
     _id: string;
     sender: User;
     content: string;
-    chat: string;
+    chat: {
+        _id: string;
+    };
     createdAt: string;
 }
 export interface Conversation {
     _id: string;
-    chatName?: string;
-    isGroupChat: boolean;
     users: User[];
+    isGroupChat: boolean;
     latestMessage?: Message;
-    groupAdmin?: User;
 }
-
-// --- Best Practice: Initialize socket as null ---
-let socket: Socket | null = null;
 
 export function ChatPage() {
     const { user } = useAuth();
-    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const socket = useSocket();
+    const [chats, setChats] = useState<Conversation[]>([]);
+    const [friendsToChatWith, setFriendsToChatWith] = useState<User[]>([]);
     const [activeConversation, setActiveConversation] =
         useState<Conversation | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [loadingSidebar, setLoadingSidebar] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(false);
 
-    // --- Best Practice: Manage socket connection in useEffect ---
     useEffect(() => {
-        // Connect only when the user is authenticated
+        const getSidebarData = async () => {
+            try {
+                setLoadingSidebar(true);
+                const response = await api.get("/chat/sidebar");
+                setChats(response.data.data.chats);
+                setFriendsToChatWith(response.data.data.friendsToChatWith);
+            } catch (error) {
+                console.error("Failed to fetch sidebar data:", error);
+            } finally {
+                setLoadingSidebar(false);
+            }
+        };
         if (user) {
-            socket = io("http://localhost:8000"); // Use http:// for clarity
-
-            // Cleanup on component unmount
-            return () => {
-                socket?.disconnect();
-                socket = null;
-            };
+            getSidebarData();
         }
     }, [user]);
 
-    // --- Effect for fetching initial chats ---
-    useEffect(() => {
-        const getChats = async () => {
-            try {
-                setLoading(true);
-                // FIX: Await the API call directly.
-                const response = await api.get("/chat");
-                setConversations(response.data.data);
-            } catch (error) {
-                console.error("Failed to fetch chats:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        getChats();
-    }, []);
+    function getOtherUser(users: User[], currentUser: User): User | undefined {
+        return users.find((u) => u._id !== currentUser._id);
+    }
 
-    // --- Effect for handling incoming messages ---
     useEffect(() => {
+        if (!socket) return;
         const handleReceiveMessage = (newMessage: Message) => {
-            setConversations((prevConvos) => {
-                const updatedConvos = prevConvos.map((convo) => {
-                    if (convo._id === newMessage.chat) {
-                        return { ...convo, latestMessage: newMessage };
-                    }
-                    return convo;
-                });
-                // Improvement: Sort conversations to bring the newest to the top
-                return updatedConvos.sort(
-                    (a, b) =>
-                        new Date(b.latestMessage?.createdAt ?? 0).getTime() -
-                        new Date(a.latestMessage?.createdAt ?? 0).getTime()
-                );
-            });
+            if (newMessage.chat._id === activeConversation?._id) {
+                setMessages((prev) => [...prev, newMessage]);
+            }
+            setChats((prevChats) =>
+                prevChats
+                    .map((chat) =>
+                        chat._id === newMessage.chat._id
+                            ? { ...chat, latestMessage: newMessage }
+                            : chat
+                    )
+                    .sort(
+                        (a, b) =>
+                            new Date(
+                                b.latestMessage?.createdAt ?? 0
+                            ).getTime() -
+                            new Date(a.latestMessage?.createdAt ?? 0).getTime()
+                    )
+            );
         };
-
-        socket?.on("receiveMessage", handleReceiveMessage);
-
-        // FIX: Provide the correct handler to off() for cleanup
+        socket.on("receiveMessage", handleReceiveMessage);
         return () => {
-            socket?.off("receiveMessage", handleReceiveMessage);
+            socket.off("receiveMessage", handleReceiveMessage);
         };
-    }, []); // This effect runs once to set up the listener
+    }, [socket, activeConversation]);
 
-    const handleSelectConversation = (conversation: Conversation) => {
-        setActiveConversation(conversation);
-        socket?.emit("joinRoom", conversation._id);
+    const handleSelectUser = async (selectedUser: User) => {
+        try {
+            setLoadingMessages(true);
+            setMessages([]);
+            const chatResponse = await api.post("/chat", {
+                userId: selectedUser._id,
+            });
+            const conversation: Conversation = chatResponse.data.data;
+            setActiveConversation(conversation);
+            const messagesResponse = await api.get(
+                `/message/${conversation._id}`
+            );
+            setMessages(messagesResponse.data.data);
+            socket?.emit("joinRoom", conversation._id);
+        } catch (error) {
+            console.error("Failed to start chat:", error);
+        } finally {
+            setLoadingMessages(false);
+        }
     };
 
     const handleSendMessage = async (messageText: string) => {
-        if (!activeConversation || !socket) return;
-
+        if (!activeConversation) return;
         try {
-            // FIX: The API call must be awaited and must return a promise
             const response = await api.post("/message", {
                 content: messageText,
                 chatId: activeConversation._id,
             });
-            const newMessage: Message = response.data.data;
-
-            // Emit the message to other users
-            socket.emit("sendMessage", newMessage);
-
-            // Update the conversation list with the new latest message
-            setConversations((prevConvos) =>
-                prevConvos.map((convo) =>
-                    convo._id === activeConversation._id
-                        ? { ...convo, latestMessage: newMessage }
-                        : convo
-                )
-            );
+            const newMessage = response.data.data;
+            setMessages((prev) => [...prev, newMessage]);
         } catch (error) {
-            console.error("Failed to send message:", error);
+            console.error("Failed to send message", error);
         }
     };
 
     return (
-        // The JSX remains largely the same
-        <div className="container mx-auto px-3 max-w-7xl h-screen flex flex-col">
-            <div className="flex flex-col lg:flex-row gap-8 flex-grow min-h-0 py-8">
-                <div className="w-full lg:w-1/3 xl:w-1/4 flex-shrink-0">
-                    <ChatList
-                        conversations={conversations}
-                        activeConversationId={activeConversation?._id}
-                        onSelectConversation={handleSelectConversation}
-                        loading={loading}
+        <div className="h-screen w-full flex bg-zinc-950 text-zinc-100">
+            <div className="w-full lg:w-1/3 xl:w-1/4 flex-shrink-0 border-r border-zinc-800">
+                <ChatList
+                    chats={chats}
+                    friends={friendsToChatWith}
+                    onSelectUser={handleSelectUser}
+                    loading={loadingSidebar}
+                    activeUserId={
+                        activeConversation
+                            ? getOtherUser(activeConversation.users, user!)
+                                  ?._id ?? null
+                            : null
+                    }
+                />
+            </div>
+            <div className="w-full flex-grow">
+                {activeConversation ? (
+                    <ChatWindow
+                        key={activeConversation._id}
+                        conversation={activeConversation}
+                        messages={messages}
+                        loading={loadingMessages}
+                        onSendMessage={handleSendMessage}
                     />
-                </div>
-                <div className="w-full flex-grow">
-                    {activeConversation && socket ? ( // Also check for socket
-                        <ChatWindow
-                            key={activeConversation._id}
-                            conversation={activeConversation}
-                            onSendMessage={handleSendMessage}
-                            socket={socket}
-                        />
-                    ) : (
-                        <Card className="rounded-lg shadow-sm h-full flex items-center justify-center">
-                            <CardContent>
-                                <p className="text-gray-500">
-                                    Select a conversation to start chatting.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
+                ) : (
+                    <Card className="rounded-none shadow-none h-full w-full flex items-center justify-center bg-zinc-950 text-zinc-400 border-none">
+                        <CardContent className="pt-6">
+                            <p>
+                                Select a conversation or friend to start
+                                chatting.
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </div>
     );

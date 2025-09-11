@@ -3,7 +3,7 @@ import {
     signup,
     login,
     logout,
-    refreshAccessToken,
+    refreshAccessToken
 } from "../controllers/auth.controller.js";
 import { protectRoute } from "../middlewares/protectRoutes.js";
 
