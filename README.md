@@ -1,170 +1,178 @@
-# Echo – Scalable Social Media Backend
+#  Echo: Full-Stack Social Media Platform with Real-Time Chat
 
-> A production-grade, containerized, and performance-tested backend powering a social media platform supporting rich posts (text + images), user auth, profiles, and feed timelines. Built for scale and extensibility.
+[![Frontend](https://img.shields.io/badge/Frontend-React%20/%20TS-blue.svg)](https://react.dev/) [![Backend](https://img.shields.io/badge/Backend-Node.js%20/%20Express-green.svg)](https://expressjs.com/) [![Real--time](https://img.shields.io/badge/Real--time-Socket.IO-lightgrey.svg)](https://socket.io/) [![Containerization](https://img.shields.io/badge/Container-Docker-blue.svg)](https://www.docker.com/) [![Deployment](https://img.shields.io/badge/Deploy-AWS%20ECS-orange.svg)](https://aws.amazon.com/ecs/)
+
+Echo is a **full-stack, production-grade social media platform** built for scale. It features a robust, containerized backend powering a REST API for posts and profiles, and a real-time WebSocket API for its integrated chat application. The frontend is a modern, responsive React application.
+
+---
+
+## 📸 Showcase
+
+<p align="center">
+  <img src="./docs/Profile.png" alt="Profile Page" width="49%">
+  <img src="./docs/Chat.png" alt="Chat Interface" width="49%">
+</p>
+
+---
+
+## ✨ Core Features
+
+* **Full-Stack Application:** Includes both the backend server and a feature-rich React frontend.
+* **Real-Time Chat:** A complete one-on-one messaging system built with **Socket.IO**, featuring:
+    * Live message delivery.
+    * A smart sidebar showing recent chats and friends available to chat.
+    * Persistent message history.
+* **Rich Content Posts:** Users can create posts with an ordered sequence of text and image blocks.
+* **Stateless JWT Authentication:** Secure, scalable user authentication for both the REST API and WebSocket connections.
+* **Cloud-Native & Containerized:** The backend is fully Dockerized and designed for deployment on cloud services like AWS ECS.
+* **Performance Validated:** Includes an advanced K6 testing suite to stress test the backend and identify performance limits.
+
+---
+
+## ⚙️ System Architecture
+
+The application uses a decoupled frontend/backend architecture, communicating via both HTTPS for standard API requests and WebSockets for real-time events.
+
+```mermaid
+graph TD
+    subgraph "User's Browser"
+        A[React Frontend App]
+    end
+
+    subgraph "AWS Cloud"
+        B(API & WebSocket Server)
+        subgraph "Amazon ECS (Fargate)"
+            C[Docker Container: Node.js/Express/Socket.IO]
+        end
+        B --> C
+    end
+    
+    subgraph "Managed Services"
+        D[MongoDB Atlas]
+        E[Cloudinary CDN]
+    end
+
+    A -- HTTPS REST API (for Posts, Auth, Chat History) --> B
+    A -- WebSocket Connection (for Real-time Messages) --> B
+    C -- CRUD Operations --> D
+    C -- Image Uploads --> E
+```
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Node.js** + **Express.js**
-- **TypeScript**
-- **MongoDB Atlas** (Cloud DB)
-- **JWT Authentication**
-- **Cloudinary** (Image uploads)
-- **Multer** (Multi-part form data parsing)
-- **Docker** (Multi-stage build)
-- **Amazon ECS (Fargate)** – container orchestration
-- **K6** – Load & performance testing
+| Category         | Technology                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Frontend** | **React**, **TypeScript**, **Tailwind CSS**, **ShadCN UI**, **Axios**, **Socket.IO Client** |
+| **Backend** | **Node.js**, **Express.js**, **Socket.IO Server** |
+| **Database** | **MongoDB Atlas** with **Mongoose** ODM                                                                     |
+| **Authentication** | **JSON Web Tokens (JWT)** |
+| **Media Storage** | **Cloudinary** for image uploads and CDN delivery                                                           |
+| **DevOps & Cloud** | **Docker** (Multi-stage builds), **Amazon ECS (Fargate)** |
+| **Testing** | **K6** for backend stress and spike testing                                                                 |
 
 ---
-
-## 🧩 Features
-
-- ✅ User authentication (JWT-based)
-- ✅ Create rich posts (text & images in order)
-- ✅ Profile retrieval
-- ✅ Feed endpoint with pagination
-- ✅ Cloud image storage (Cloudinary)
-- ✅ Fully Dockerized & CI-ready
-- ✅ K6 performance tests with custom scenarios
-- ✅ ECS-optimized for container deployment
-
----
-
-## ⚙️ Architecture
-
-```
-
-Client
-|
-v
-\[REST API Server: Express.js (TypeScript)]
-|
-\|--- Auth (JWT)
-\|--- Posts (rich content: text/image blocks)
-\|--- User Profile
-|
-\|---> MongoDB Atlas (data)
-\|---> Cloudinary (images)
-
-````
 
 ## 🚀 Getting Started
 
+### Prerequisites
+
+-   Node.js (v18 or later)
+-   npm or yarn
+-   Git
+-   Docker (for running the backend)
+
 ### 🧪 Run Locally
 
-#### 1. Clone & Install
+You'll need to run both the backend and frontend servers in separate terminal windows.
+
+#### 1. Backend Setup
 
 ```bash
-git clone https://github.com/yourusername/echo-backend.git
+# Clone the backend repository
+git clone [https://github.com/yourusername/echo-backend.git](https://github.com/yourusername/echo-backend.git)
 cd echo-backend
+
+# Install dependencies
 npm install
-```
 
-#### 2. Setup Environment
+# Create a .env file and add your secrets (see below)
+# ...
 
-Create a `.env` file in root:
-
-```
-PORT=8000
-MONGODB_URI=your_mongo_atlas_uri
-JWT_SECRET=your_jwt_secret
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_key
-CLOUDINARY_API_SECRET=your_secret
-```
-
-#### 3. Run Dev Server
-
-```bash
+# Run the backend dev server
 npm run dev
 ```
 
----
-
-## 🐳 Docker
-
-### Build & Run Container
+#### 2. Frontend Setup
 
 ```bash
-# Build
-docker build -t cndn/echo-backend .
+# Clone the frontend repository
+git clone [https://github.com/yourusername/echo-frontend.git](https://github.com/yourusername/echo-frontend.git)
+cd echo-frontend
 
-# Run
-docker run -p 8000:8000 --env-file .env cndn/echo-backend
+# Install dependencies
+npm install
+
+# Run the frontend dev server
+npm run dev
+```
+The React app will typically start on `http://localhost:5173`.
+
+---
+## 🐳 Running Backend with Docker
+
+The backend is fully containerized for easy deployment.
+
+```bash
+# From the backend directory
+docker build -t your-dockerhub-username/echo-backend .
+docker run -p 8000:8000 --env-file .env your-dockerhub-username/echo-backend
 ```
 
 ---
 
-## 🧪 Load Testing (K6)
+## 🧪 Advanced Performance Testing (K6)
 
-### Scenario:
+To validate production-readiness, the backend was subjected to multiple advanced load testing scenarios using K6. This includes both **stress tests** to find the system's limits and **spike tests** to ensure resilience against sudden traffic surges.
 
-Simulates 100 virtual users for 2 minutes:
+### Stress Test: Finding the Breaking Point
 
-```bash
-k6 run test.js
-```
+A ramping-vus (virtual users) test was conducted to determine the upper limits of the current single-container architecture. The load was gradually increased from 25 to 250 concurrent users.
 
-Example K6 flow:
+-   **Result:** The system remained **100% stable up to 150 VUs**.
+-   **Breaking Point:** Around **250 VUs**, the server became saturated, leading to a ~1.2% error rate (`connection reset by peer`), which successfully identified the scaling bottleneck.
 
-* Login
-* Fetch feed
-* Create post (with text + image)
-* Fetch profile
+![K6 Stress Test Results](./docs/Screenshot-Stress-Test.png)
 
-See [`test.js`](./test.js) for script.
+### Spike Test: Handling Sudden Surges
 
----
+A spike test was conducted to ensure the system could handle a sudden, massive increase in traffic.
 
-## 🧱 Deployment
+-   **Result:** The backend successfully handled a spike of **500 concurrent users** for 3 minutes with a **100% success rate**.
 
-### 🚢 ECS (Fargate)
+![K6 Spike Test Results](./docs/Screenshot-Spike-Test.png)
 
-* Container image hosted on **Docker Hub**
-* Task definition uses public image
-* Security group allows port `8000`
-* VPC with public subnet
-* Tested on 2 vCPU / 6GB RAM instance
+| Metric          | Result                            |
+| --------------- | --------------------------------- |
+| **Virtual Users** | **500 (Spike)** |
+| **Success Rate** | **100%** |
+| **Avg. RPS** | **~61 requests/s** |
+| **p(95) Latency** | **~7.3s** (including image uploads) |
 
 ---
 
-## 📊 Performance
+## 📌 Project Roadmap
 
-### Monolithic Load Test Results (K6, 100 VUs)
-
-* Avg RPS: \~50/s
-* Avg Latency: \~1.6s
-* Success Rate: 100%
-* Uploads: Cloudinary stable under load
-* Memory Footprint: < 300MB/container
-
-> Microservices refactor in progress for horizontal scaling and modularity.
-
----
-
-## 📌 Roadmap
-
-* [x] Image + Text block post support
-* [x] Dockerized backend
-* [x] ECS deployment with public image
-* [x] Load testing with K6
-* [ ] Refactor to microservices (Post / User / Auth / Media)
-* [ ] Add Redis caching
-* [ ] Add Observability (Prometheus + Grafana)
-* [ ] CI/CD via GitHub Actions
-
----
-
-## 🧠 Design Decisions
-
-| Area          | Choice                            | Reason                                                       |
-| ------------- | --------------------------------- | ------------------------------------------------------------ |
-| Image Uploads | Cloudinary                        | Fast CDN, scalable, and direct support for buffer uploads    |
-| MongoDB       | Atlas (Cloud DB)                  | Managed DB, high availability, easy to scale                 |
-| Auth          | JWT                               | Stateless, scalable, and widely supported                    |
-| Load Testing  | K6                                | Scripting-friendly, supports auth, uploads, and CI pipelines |
-| Docker        | Multi-stage build, Alpine variant | Smaller image size, faster deploys                           |
+-   [x] Rich content post support
+-   [x] Full real-time chat feature
+-   [x] Dockerize the backend
+-   [x] Deploy to AWS ECS
+-   [x] Implement K6 stress & spike testing
+-   [ ] Refactor backend to a microservices architecture
+-   [ ] Add Redis for caching
+-   [ ] Implement real-time notifications (likes, comments)
+-   [ ] Set up a CI/CD pipeline with GitHub Actions
 
 ---
 
@@ -172,6 +180,6 @@ See [`test.js`](./test.js) for script.
 
 **Chandan R**
 
-> B.Tech CSE | MERN & Backend Dev | AWS & DevOps Enthusiast
+B.Tech CSE graduate passionate about building scalable full-stack applications, cloud infrastructure, and DevOps practices.
 
-> Connect with me on [LinkedIn](https://linkedin.com/in/chandan--r)
+> Let's connect on [LinkedIn](https://linkedin.com/in/chandan--r)!
